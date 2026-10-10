@@ -2,14 +2,15 @@
 ##
 ## Peran: orkestrasi saja. Fisika = BallisticsModel (via Arrow), collision =
 ## CollisionService, bidik = AimController, skor = ScoringService, level =
-## LevelData dari JSON. Kamera (ArenaCamera), VFX angin (WindVFX), dan preview
-## lintasan (TrajectoryPreview) hanya presentasi (ketentuan T-1.6 poin 5).
+## LevelData dari JSON. Kamera (ArenaCamera), VFX angin (WindVFX), preview
+## lintasan (TrajectoryPreview), dan HUD (ArenaHUD) hanya presentasi.
 ##
 ## Alur: sentuh untuk menarik; lepas untuk menembak; gerak panah via advance()
 ## per frame dengan delta nyata; hasil hit dinilai ScoringService dari titik
-## masuk pertama. Batas panah per level (arrow_count); E memuat ulang level.
+## penetrasi ujung panah (ADR-011). Batas panah per level (arrow_count); E
+## memuat ulang level.
 ##
-## Requirement: FR-GF-001..005, FR-LV-001 (dasar), FR-GF-006, FR-AV-007.
+## Requirement: FR-GF-001..005, FR-LV-001 (dasar), FR-GF-006, FR-AV-006/007.
 
 class_name Arena
 extends Node2D
@@ -32,8 +33,7 @@ var _arrow: Arrow
 var _camera: ArenaCamera
 var _wind_vfx: WindVFX
 var _preview: TrajectoryPreview
-var _hud_score: Label
-var _hud_info: Label
+var _hud: ArenaHUD
 var _arrows_left := 0
 var _total_score := 0
 var _touch_index := -1
@@ -56,22 +56,14 @@ func _ready() -> void:
     _preview.low_effects = low_effects
     _preview.z_index = 5
     add_child(_preview)
-    _build_hud()
+    _hud = ArenaHUD.new()
+    _hud.low_effects = low_effects
+    add_child(_hud)
     _levels = LevelData.load_all_from_file(LEVELS_PATH)
     if _levels.is_empty():
         push_error("Arena: no valid levels loaded from %s" % LEVELS_PATH)
         return
     load_level(0)
-
-
-func _build_hud() -> void:
-    _hud_score = Label.new()
-    _hud_score.position = Vector2(16.0, 16.0)
-    _hud_score.text = "Skor: 0"
-    add_child(_hud_score)
-    _hud_info = Label.new()
-    _hud_info.position = Vector2(16.0, 48.0)
-    add_child(_hud_info)
 
 
 ## Muat level dari data; membangun target visual sederhana (placeholder Phase 6).
@@ -86,7 +78,9 @@ func load_level(index: int) -> void:
     _arrow.reset()
     _arrow.targets = _level.to_collision_targets()
     _wind_vfx.update_wind(_level.wind)
+    _hud.update_wind(_level.wind)
     _preview.clear_preview()
+    _hud.clear_aim()
     for child in get_children():
         if child is Node2D and child.get_meta("is_target", false):
             child.queue_free()
@@ -163,6 +157,7 @@ func _screen_to_world(screen_position: Vector2) -> Vector2:
 func _refresh_preview() -> void:
     if not _aim.is_aiming():
         return
+    _hud.update_aim(_aim.get_power())
     var shot := _current_shot_velocity()
     if shot == Vector2.ZERO:
         _preview.clear_preview()
@@ -183,6 +178,7 @@ func _fire() -> void:
     var shot := _aim.release()
     _camera.set_aiming(false)
     _preview.clear_preview()
+    _hud.clear_aim()
     if shot.is_empty() or _arrows_left <= 0 or not _arrow.launch(
         ARCHER_POSITION, shot.velocity, BallisticsModel.DEFAULT_GRAVITY, _level.wind, _level.drag
     ):
@@ -205,12 +201,9 @@ func _on_hit(hit: Dictionary) -> void:
     var combo := _scoring.register_shot(scored)
     if scored:
         _total_score += ScoringService.combo_points(int(result.points), combo)
+    _hud.show_shot_feedback(int(result.get("points", 0)), bool(result.get("is_perfect", false)), combo)
     _update_hud()
 
 
 func _update_hud() -> void:
-    _hud_score.text = "Skor: %d" % _total_score
-    var wind := _level.wind
-    _hud_info.text = "%s | Panah: %d | Angin: %.1f m/s" % [
-        _level.display_name, _arrows_left, wind.x
-    ]
+    _hud.update_score(_total_score, _arrows_left, _level.display_name)

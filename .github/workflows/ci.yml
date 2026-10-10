@@ -68,14 +68,14 @@ jobs:
 
       # Step 3: run the full headless test suite. Runner exits nonzero on any
       # test failure; pipefail propagates the Godot exit code through tee.
-      - name: Run headless test suite (TP-1.1 .. TP-1.23)
+      - name: Run headless test suite (TP-1.1 .. TP-1.24)
         if: always()
         run: |
           set -uxo pipefail
           godot --headless --path . --script tests/run_tests.gd 2>&1 | tee test_output.log
           exit ${PIPESTATUS[0]}
 
-      # Step 4: traceability guard — all 23 TP-1.x groups must have executed
+      # Step 4: traceability guard — all 24 TP-1.x groups must have executed
       # (PASS or FAIL), no check may report FAIL, and results are written to
       # the public job summary for verifiable evidence.
       - name: Verify all TP-1.x groups executed with zero failures
@@ -90,7 +90,7 @@ jobs:
             echo ""
             grep -E 'Phase 1 module tests' test_output.log || true
             echo ""
-            echo "- Distinct TP-1.x groups executed: ${found} / 23 (expected 23)"
+            echo "- Distinct TP-1.x groups executed: ${found} / 24 (expected 24)"
             echo "- Checks passed: ${passed}"
             echo "- Checks failed: ${failed} (expected 0)"
             echo ""
@@ -100,12 +100,12 @@ jobs:
           while IFS= read -r line; do
             echo "::error::VERIFY-FAILED-CHECK ${line:0:250}"
           done < failed_checks.txt
-          for n in $(seq 1 23); do
+          for n in $(seq 1 24); do
             if ! grep -qE "^(PASS|FAIL): TP-1\.$n" test_output.log; then
               echo "::error::VERIFY: TP-1.$n did not execute at all"
             fi
           done
-          test "$found" -eq 23
+          test "$found" -eq 24
           test "$failed" -eq 0
 
       - name: Upload logs
