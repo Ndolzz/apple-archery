@@ -1,0 +1,8 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Placeholder icon (T-1.1). Final cartoon art asset planned for Phase 6 per 03-BACKLOG T-6.1 / R-05. -->
+  <circle cx="64" cy="64" r="58" fill="#2563EB"/>
+  <circle cx="64" cy="64" r="44" fill="#EFF6FF"/>
+  <circle cx="64" cy="64" r="30" fill="#FFFFFF"/>
+  <circle cx="64" cy="64" r="10" fill="#1D4ED8"/>
+  <path d="M64 6 L78 20 L64 34 L50 20 Z" fill="#60A5FA"/>
+</svg>

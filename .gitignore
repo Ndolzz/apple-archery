@@ -1,0 +1,23 @@
+# Godot 4 generated files
+.godot/
+*.translation
+
+# Export artifacts (built via CI, not committed)
+export/
+build/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# Export presets may contain keystore references; keep credentials out of git
+export_presets.cfg
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.tmp
+*~
+
+# Logs
+*.log

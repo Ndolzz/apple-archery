@@ -1,0 +1,32 @@
+; Engine configuration file.
+; Apple Archery — Godot 4.x project configuration.
+; T-1.1 (Phase 1, SDD baseline docs/SDD/00-SPEC.md, arsitektur 01-ARCHITECTURE.md)
+
+config_version=5
+
+[application]
+
+config/name="Apple Archery"
+config/description="2D cartoon-style archery game. Developed by Naze."
+config/version="0.1.0"
+config/features=PackedStringArray("4.3")
+config/icon="res://icon.svg"
+run/user_data_custom_name="AppleArchery"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
