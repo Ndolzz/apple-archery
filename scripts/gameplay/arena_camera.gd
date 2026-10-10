@@ -5,7 +5,7 @@
 ##
 ## Logika zoom murni (dapat diuji tanpa node):
 ##   - compute_zoom_target: aiming -> ZOOM_AIM; selain itu ZOOM_NORMAL.
-##   - compute_zoom_step: smoothing eksponensial exp(-SMOOTH * dt), tanpa gerakan
+##   - compute_zoom_step: smoothing eksponensial exp(-SMOOTHING * dt), tanpa gerakan
 ##     mendadak (langkah terbatas oleh faktor smoothing), kembali mulus ke normal
 ##     setelah tembakan atau pembatalan.
 ##   - Nilai dijepit ZOOM_MIN..ZOOM_MAX.
@@ -35,7 +35,7 @@ static func compute_zoom_target(aiming: bool) -> float:
 
 ## Pure: satu langkah smoothing eksponensial menuju target (tanpa lompatan).
 static func compute_zoom_step(current: float, target: float, delta: float) -> float:
-    var next: float = current + (target - current) * (1.0 - exp(-SMOOTH * delta))
+    var next: float = current + (target - current) * (1.0 - exp(-SMOOTHING * delta))
     return clampf(next, ZOOM_MIN, ZOOM_MAX)
 
 

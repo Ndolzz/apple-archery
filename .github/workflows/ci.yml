@@ -34,7 +34,7 @@ jobs:
           godot --version
 
       # Step 1: import all resources, then fail if the log contains script or
-      # resource load errors. Matched log lines are emitted as annotations for
+      # resource load errors. Matched lines are emitted as annotations for
       # public traceability (logs require authentication).
       - name: Import project resources (headless)
         run: |
@@ -56,11 +56,11 @@ jobs:
           set -uxo pipefail
           status=0
           for script in $(git ls-files '*.gd'); do
-            if godot --headless --path . --check-only --script "res://$script" > "parse_$script.log" 2>&1; then
+            if godot --headless --path . --check-only --script "res://$script" > "parse_check.log" 2>&1; then
               echo "Parsed OK: res://$script"
             else
-              echo "::error::PARSE-FAIL res://$script (see log tail in annotations)"
-              tail -5 "parse_$script.log" | while IFS= read -r line; do
+              echo "::error::PARSE-FAIL res://$script (log tail in next annotations)"
+              tail -5 "parse_check.log" | while IFS= read -r line; do
                 echo "::error::PARSE-FAIL res://$script :: ${line:0:230}"
               done
               status=1
@@ -90,11 +90,16 @@ jobs:
         if: always()
         run: |
           set -euxo pipefail
-          found=$(grep -oE '^PASS: TP-1\.[0-9]+' test_output.log | sort -u | wc -l || true)
+          found=$(grep -oE '^(PASS|FAIL): TP-1\.[0-9]+' test_output.log | sort -u | wc -l || true)
           failed=$(grep -c '^FAIL:' test_output.log || true)
-          echo "Distinct TP-1.x groups with at least one PASS: ${found} (expected 22)"
+          echo "Distinct TP-1.x groups present in output: ${found} (expected 22)"
           echo "Failed checks: ${failed} (expected 0)"
           echo "::error::VERIFY: found=${found}/22 TP groups, failed checks=${failed}"
+          for n in $(seq 1 22); do
+            if ! grep -qE "^(PASS|FAIL): TP-1\.$n" test_output.log; then
+              echo "::error::VERIFY: TP-1.$n did not execute at all"
+            fi
+          done
           test "$found" -eq 22
           test "$failed" -eq 0
 
