@@ -59,3 +59,16 @@ Keputusan:
 4. low_effects tersedia pada VFX dan preview (pengurangan goresan/titik) untuk perangkat terbatas; z_index VFX di bawah gameplay agar tidak menutupi target, zona, atau panah.
 5. Kebutuhan ini dicatat sebagai requirement baru FR-GF-006 dan FR-AV-007 (perubahan spesifikasi v0.2).
 Konsekuensi: Scope resmi bertambah dua requirement presentasi; tidak ada dampak pada logika simulasi; pengujian otomatis menutupi fungsi murni, verifikasi visual manual terdokumentasi.
+
+## ADR-011: Skor dari kedalaman penetrasi ujung panah (T-1.7)
+Status: Disetujui pemilik proyek (briefing T-1.7: keputusan desain untuk R-11)
+Konteks: R-11 — dengan collision lingkaran dan skor dari titik masuk pertama (ADR-009), titik impact gameplay selalu tepat di tepi target (d = radius) sehingga tembakan nyata selalu mendapat zona terluar; zona tengah/pusat tidak pernah tercapai dari jalur gameplay normal.
+Keputusan:
+1. Swept collision tetap digunakan untuk mendeteksi tabrakan dan menentukan target yang terkena (titik masuk pertama; target pertama sepanjang jalur). Hasil hit menambah kunci "direction": arah segmen ternormalisasi (Vector2.ZERO bila degenerate).
+2. Titik skor S = E + dhat * p dalam koordinat target, dengan E = titik masuk pertama, dhat = arah datang ternormalisasi, p = PENETRATION_FRACTION * L dijepit [0, L]; L = 2 * sqrt(r^2 - h^2) adalah panjang chord lingkaran target sepanjang garis tembakan, h = jarak tegak lurus garis tembakan ke pusat dihitung dari E. Target statis; zona konsentris ADR-009 (fraksi radius, batas inklusif ke zona dalam) tidak berubah.
+3. PENETRATION_FRACTION = 0.5 (konstanta implementasi, bukan requirement): tembakan lurus melalui pusat menempatkan titik skor tepat di pusat sehingga Perfect Shot tercapai dari jalur gameplay normal, tanpa mengorbankan deteksi tabrakan cepat (swept tetap menangkap panah cepat). Konfigurasi per level ditunda ke Phase 2 (dicatat sebagai data).
+4. Kasus batas: arah nol / tabrakan tangensial / titik masuk sudah di dalam target → S = E (tepi; zona terluar; batas inklusif ke zona dalam tetap berlaku); komponen arah maju <= 0 → S = E; tembakan dari arah berlawanan simetris terhadap geometri; panah STUCK tidak menghasilkan skor baru; satu panah maksimal menghasilkan satu skor.
+5. Panah tetap menempel secara visual pada titik masuk E (FR-GF-003 tidak berubah); titik skor S hanya konsep penilaian.
+6. Nilai ADR-009 dipertahankan penuh: zona 50/20/10 (fraksi 1/3, 2/3, 1.0), Perfect Shot = zona pusat, batas inklusif ke zona dalam, rumus combo 1 + 0.25 * (combo - 1) untuk combo >= 2.
+Dampak API: CollisionService.segment_circle_first_hit mengembalikan "direction"; ScoringService.score_hit menghitung titik penetrasi via compute_penetration_point sebelum classify; classify tidak berubah. Ekspektasi TP-1.17 diperbarui (penetrasi, bukan tepi) dan TP-1.23 (regresi penetrasi) ditambahkan; TP-1.24 (logika murni HUD) ditambahkan pada T-1.7 yang sama.
+Konsekuensi: Skor kini bergantung pada geometri penetrasi yang terdefinisi, bukan titik masuk semata. Verifikasi: run CI #12 (commit 74cded1) lulus — 24/24 kelompok TP tereksekusi, 0 gagal. Keseimbangan nilai skor (tembakan pusat menjadi lebih mudah dicapai) ditinjau saat uji perangkat manual.

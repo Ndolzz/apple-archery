@@ -1,14 +1,14 @@
 # Apple Archery — Traceability Matrix
 
-Versi: 0.1.6 (diperbarui setelah T-1.8: TP-1.1..TP-1.22 lulus di CI run CI #8, commit 1b954a0; FR-QA-001 terealisasikan)
+Versi: 0.1.7 (diperbarui setelah T-1.7: ADR-011 penetrasi; TP-1.23/TP-1.24; run CI #12 commit 74cded1 lulus — 24/24 kelompok TP)
 
 | Requirement | Tugas (03-BACKLOG) | Pengujian (04-TEST-PLAN) | Fase | Status |
 |---|---|---|---|---|
-| FR-GF-001 Tarikan busur | T-1.3 | TP-1.7..TP-1.11, Manual P1 | 1 | Terverifikasi di CI (8ae4286; run CI #8 lulus; uji manual menyusul) |
-| FR-GF-002 Fisika realistis | T-1.2 | TP-1.1, TP-1.2, TP-1.3 | 1 | Terverifikasi di CI (10f5042; run CI #8 lulus) |
+| FR-GF-001 Tarikan busur | T-1.3, T-1.7 | TP-1.7..TP-1.11, TP-1.24, Manual P1 | 1 | Terverifikasi di CI (8ae4286; run CI #8 lulus; indikator daya HUD 74cded1 run CI #12 lulus; uji manual menyusul) |
+| FR-GF-002 Fisika realistis | T-1.2, T-1.7 | TP-1.1, TP-1.2, TP-1.3, TP-1.24 | 1 | Terverifikasi di CI (10f5042; run CI #8 lulus; indikator angin HUD konsisten dengan vektor angin BallisticsModel — 74cded1 run CI #12 lulus) |
 | FR-GF-003 Collision | T-1.4 | TP-1.12..TP-1.16, Manual P1 | 1 | Terverifikasi di CI (31596a7; run CI #8 lulus; uji manual menyusul) |
 | FR-GF-004 Prediksi lintasan | T-1.2, T-1.6 | TP-1.4, TP-1.22, Manual P1 | 1 | Terverifikasi di CI (10f5042, 52094d; run CI #8 lulus) |
-| FR-GF-005 Skoring/Perfect/combo | T-1.5 | TP-1.5, TP-1.6, TP-1.17, Manual P1 | 1 | Terverifikasi di CI (d5d68ca, 23cc967; run CI #8 lulus); catatan desain R-11 menunggu keputusan pengguna |
+| FR-GF-005 Skoring/Perfect/combo | T-1.5, T-1.7 | TP-1.5, TP-1.6, TP-1.17, TP-1.23, Manual P1 | 1 | Terverifikasi di CI (d5d68ca, 23cc967, 13bac49; run CI #8 dan #12 lulus); R-11 teratasi via ADR-011 (titik skor dari penetrasi; uji manual menyusul) |
 | FR-GF-006 Soft camera zoom (v0.2) | T-1.6 | TP-1.20, Manual P1 | 1 | Terverifikasi di CI (9e07151; run CI #8 lulus; uji manual menyusul) |
 | FR-LV-001 Level bertahap (dasar) | T-1.6, T-2.6 | TP-1.18, TP-1.19, TP-2.1 | 1-2 | Dasar terverifikasi di CI: 3 level dari data (9e07151; run CI #8 lulus) |
 | FR-LV-002 Peta dunia | T-2.1 | Manual P2 | 2 | Belum |
@@ -39,14 +39,14 @@ Versi: 0.1.6 (diperbarui setelah T-1.8: TP-1.1..TP-1.22 lulus di CI run CI #8, c
 | FR-AV-007 Cartoon wind VFX (v0.2) | T-1.6 | TP-1.21, Manual P1 | 1 | Terverifikasi di CI (9e07151; run CI #8 lulus; uji manual menyusul) |
 | FR-SY-001 Save offline | T-6.6 | TP-6.1 | 6 | Belum |
 | FR-SY-002 Autosave/backup | T-6.6 | TP-6.1 | 6 | Belum |
-| FR-SY-003 Performa rendah | T-6.7 | Manual P6/P7 (FPS) | 6-7 | Belum (low_effects dasar tersedia di T-1.6) |
+| FR-SY-003 Performa rendah | T-6.7 | Manual P6/P7 (FPS) | 6-7 | Belum (low_effects dasar tersedia di T-1.6; T-1.7 menambahkannya pada HUD) |
 | FR-DV-001 Identitas Naze | T-6.8 | Manual P6 | 6 | Belum |
 | FR-DV-002 About/Credits | T-6.8 | Manual P6 | 6 | Belum |
 | FR-DV-003 Changelog | T-6.8 | Manual P6 | 6 | Belum |
 | FR-DV-004 Developer Console | T-6.9 | Manual P6 | 6 | Belum |
 | FR-DV-005 Physics Lab | T-6.9 | Manual P6 | 6 | Belum |
 | FR-DV-006 Debug Overlay | T-6.9 | Manual P6 | 6 | Belum |
-| FR-QA-001 Tes otomatis | T-1.8, T-1.9 | Log CI | 1 | Terealisasikan: workflow ci.yml Godot 4.3-stable (8109893..1b954a0); run CI #8 lulus — import headless, parse check seluruh .gd, TP-1.1..TP-1.22 (111 lulus/0 gagal), gerbang keterlacakan; T-1.9 menyempurnaan cakupan menyusul |
+| FR-QA-001 Tes otomatis | T-1.8, T-1.9 | Log CI | 1 | Terealisasikan: workflow ci.yml Godot 4.3-stable (8109893..1b954a0); run CI #8 lulus (TP-1.1..1.22, 111 lulus/0 gagal); T-1.7 memperluas ke TP-1.1..TP-1.24 — run CI #12 (74cded1) lulus, 24/24 kelompok, 0 gagal; T-1.9 penyempurnaan cakupan lanjutan menyusul |
 | FR-QA-002 Regresi | T-7.1 | Log CI | 7 | Belum (dasar: CI berjalan pada setiap push sejak T-1.8) |
 | FR-QA-003 Build APK | T-7.3 | Artefak workflow | 7 | Belum |
 | FR-QA-004 Verifikasi APK | T-7.4 | Catatan manual | 7 | Belum |

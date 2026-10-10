@@ -1,6 +1,6 @@
 # Apple Archery — Test Plan
 
-Versi: 0.1.5 (TP-1.1 s.d. TP-1.22 tereksekusi dan lulus di CI pada T-1.8; koreksi pengujian berbasis bukti run CI dicatat)
+Versi: 0.1.7 (T-1.7: TP-1.23 regresi penetrasi ADR-011 dan TP-1.24 logika murni HUD ditambahkan; ekspektasi TP-1.17 diperbarui ke penetrasi; bukti run CI #12)
 
 ## 1. Strategi
 
@@ -13,7 +13,7 @@ Versi: 0.1.5 (TP-1.1 s.d. TP-1.22 tereksekusi dan lulus di CI pada T-1.8; koreks
 
 ### Status eksekusi CI (T-1.8)
 
-TP-1.1 s.d. TP-1.22 tereksekusi di GitHub Actions (workflow ci.yml, Godot 4.3-stable eksplisit, ubuntu-24.04). Bukti: run CI #8 pada commit 1b954a0 — job "Headless import, parse check, and tests" succeeded; 22/22 kelompok TP tereksekusi, 111 pemeriksaan lulus, 0 gagal; import resource headless dan parse check seluruh berkas .gd lulus. Riwayat run #1..#7 (kegagalan dan perbaikannya) tercatat pada catatan T-1.8 di 03-BACKLOG.md.
+TP-1.1 s.d. TP-1.24 tereksekusi di GitHub Actions (workflow ci.yml, Godot 4.3-stable eksplisit, ubuntu-24.04). Bukti: run CI #8 pada commit 1b954a0 (22/22 kelompok, 111 pemeriksaan lulus, 0 gagal) dan run CI #12 pada commit 74cded1 (24/24 kelompok tereksekusi, 0 gagal; job "Headless import, parse check, and tests" succeeded); import resource headless dan parse check seluruh berkas .gd lulus. Riwayat run #1..#7 (kegagalan dan perbaikannya) tercatat pada catatan T-1.8 di 03-BACKLOG.md. Catatan transparansi: run CI untuk commit 34518a1 gagal di gerbang keterlacakan karena run_tests.gd belum memuat TP-1.24 pada commit tersebut (kesenjangan sementara antar commit, ditutup pada 74cded1); kegagalan tersebut tidak disembunyikan.
 
 ### Phase 1 (fisika, skoring, bidik, level, presentasi murni)
 - TP-1.1 BallisticsModel: lintasan tanpa angin cocok dengan solusi analitik parabola (toleransi batas metode 0.5*|g|*dt*t ditambah margin numerik 0.001 untuk akumulasi float32 Vector2 Godot).
@@ -32,12 +32,14 @@ TP-1.1 s.d. TP-1.22 tereksekusi di GitHub Actions (workflow ci.yml, Godot 4.3-st
 - TP-1.14 Arrow: posisi node konsisten dengan BallisticsModel pada timestep tetap (simulasi independen identik); advance dipanggil per frame sesuai kontrak MAX_FRAME_DELTA.
 - TP-1.15 Arrow: panah menancap pada titik impact (titik masuk pertama), sinyal hit_target terbit, panah tidak bergerak lagi.
 - TP-1.16 Arrow: peluncuran kecepatan nol ditolak; peluncuran ulang saat terbang ditolak; reset mengembalikan status siap; advance saat idle diabaikan.
-- TP-1.17 ScoringService/Target: batas antarzona inklusif; tepi luar target dihitung; skor dari titik masuk pertama (d = radius, zona terluar menurut ADR-009); panah STUCK tanpa skor kedua; multi-target: target pertama jalur yang dinilai; id target tidak cocok tidak menghasilkan skor.
+- TP-1.17 ScoringService/Target: batas antarzona inklusif; tepi luar target dihitung; skor dari titik penetrasi ujung panah (ADR-011: tembakan horizontal melalui pusat menghasilkan Perfect 50; titik masuk hanya menentukan target dan arah datang); panah STUCK tanpa skor kedua; multi-target: target pertama jalur yang dinilai; id target tidak cocok tidak menghasilkan skor.
 - TP-1.18 LevelData: 3 level termuat dari JSON; id unik dan berurutan; parameter (wind, drag, arrow_count, target) terurai benar; urutan dan id target dipertahankan.
 - TP-1.19 LevelData: data tidak valid ditolak (id kosong, tanpa target, arrow_count < 1, radius target tidak valid, berkas hilang) — fail-fast.
 - TP-1.20 ArenaCamera (FR-GF-006): zoom tujuan saat bidik/kembali normal; konvergensi mulus; langkah satu frame kecil (tanpa gerakan mendadak); nilai dijepit batas.
 - TP-1.21 WindVFX (FR-AV-007): angin nol tanpa goresan; intensitas dan arah mengikuti vektor angin fisika; intensitas terkunci 1.0 di atas batas; arah mengikuti tanda; low_effects mengurangi jumlah goresan.
 - TP-1.22 TrajectoryPreview: titik identik dengan BallisticsModel.predict_trajectory untuk parameter sama (tidak ada fisika duplikat); low_effects mengurangi jumlah titik; toggle enabled menghapus titik.
+- TP-1.23 ScoringService/CollisionService (regresi ADR-011): titik masuk collision tidak otomatis menentukan skor akhir; penetrasi mengarah ke pusat menghasilkan Perfect (50); penetrasi dangkal menghasilkan zona luar (10); tembakan dari arah berlawanan simetris; tabrakan tangensial/arah nol dinilai dari titik masuk (tepi, inklusif); tembakan meleset tidak menghasilkan skor; satu panah tepat satu skor; target pertama sepanjang jalur konsisten.
+- TP-1.24 ArenaHUD (T-1.7, logika murni): arah angin 8 sektor sesuai konvensi y-up fisika ("•" saat tenang, timur/barat/utara/diagonal); rasio daya dijepit 0..1; teks umpan balik benar untuk Perfect ("PERFECT +50"), combo ("+20  x3"), hit biasa ("+10"), dan meleset ("Meleset!").
 
 ### Koreksi pengujian pada T-1.8 (berbasis bukti run CI; bukan pelemahan tes)
 
@@ -46,6 +48,7 @@ TP-1.1 s.d. TP-1.22 tereksekusi di GitHub Actions (workflow ci.yml, Godot 4.3-st
 3. TP-1.15: penangkapan sinyal via lambda — lambda GDScript menangkap variabel lokal secara nilai sehingga penetapan ulang tidak terlihat dari luar; diganti mutasi Array yang ditangkap.
 4. TP-1.17: titik uji "just outside middle boundary" dikoreksi (5 + 2.0 + 0.001, bukan 5 + 2/3 + 0.001 — titik lama berada di dalam zona pusat). Ekspektasi skor dari titik masuk pertama diselaraskan dengan ADR-009: titik masuk pertama lingkaran selalu tepat di tepi (d = radius) sehingga zona terluar (10 poin, bukan perfect); diperkuat kontras bahwa posisi akhir di luar target tidak menghasilkan skor. score_hit membutuhkan id target sehingga tes memakai segment_targets_first_hit (seperti jalur gameplay); segment_circle_first_hit tunggal tidak menyertakan id.
 5. Temuan desain dari TP-1.17 (bukan cacat implementasi; lihat R-11 di 06-RISKS.md): titik impact swept pada target lingkaran selalu di tepi; zona tengah/pusat tidak tercapai dari tembakan gameplay aktual di bawah ADR-009. Menunggu keputusan desain pengguna.
+6. T-1.7 (ADR-011): ekspektasi TP-1.17 diperbarui dari titik masuk pertama (tepi, 10 poin) ke titik penetrasi (tembakan melalui pusat menghasilkan Perfect 50) — perubahan ekspektasi yang dijustifikasi oleh ADR-011 yang disetujui pemilik proyek, bukan pelemahan tes. TP-1.23 (regresi penetrasi) dan TP-1.24 (logika murni HUD) ditambahkan; gerbang keterlacakan CI diperbarui ke 24 kelompok.
 
 Catatan TP-1.18 s.d. TP-1.22 (ditambahkan pada T-1.6): AC FR-GF-006 dan FR-AV-007 (baru, spesifikasi v0.2) serta AC dasar FR-LV-001 (level dari data) memerlukan metode pengujian otomatis. Penambahan metode pengujian dan requirement presentasi murni; logika simulasi tidak berubah.
 

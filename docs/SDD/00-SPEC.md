@@ -1,6 +1,6 @@
 # Apple Archery — Spesifikasi (SDD)
 
-Versi: 0.2 (T-1.6: FR-GF-006 dan FR-AV-007 ditambahkan atas permintaan pengguna; ADR-009 disetujui sementara dengan konfigurasi per level)
+Versi: 0.3 (T-1.7: FR-GF-005 diperjelas — titik skor dari kedalaman penetrasi ujung panah per ADR-011; riwayat lengkap pada bagian 6)
 Status: Draft; Phase 1 berjalan bertahap.
 
 ## 1. Ringkasan Produk
@@ -26,7 +26,7 @@ Setiap requirement memiliki ID, acceptance criteria (AC), tugas implementasi (li
 - FR-GF-004 Prediksi lintasan (trajectory hint) yang dapat diaktifkan/dinonaktifkan.
   - AC: Garis prediksi memperhitungkan gravitasi dan angin saat aktif; dihitung melalui BallisticsModel, bukan rumus duplikat.
 - FR-GF-005 Skoring berbasis zona target, Perfect Shot, dan combo.
-  - AC: Zona pusat memberi skor lebih tinggi; Perfect Shot terdeteksi; combo bertambah pada tembakan berturut-turut yang berhasil. Nilai zona dan rumus combo mengikuti ADR-009 (dapat dikonfigurasi per level).
+  - AC: Zona pusat memberi skor lebih tinggi; Perfect Shot terdeteksi; combo bertambah pada tembakan berturut-turut yang berhasil. Nilai zona dan rumus combo mengikuti ADR-009 (dapat dikonfigurasi per level). Titik skor ditentukan dari kedalaman penetrasi ujung panah ke dalam geometri target (ADR-011): tembakan yang mengarah ke pusat dapat mencapai zona pusat (Perfect Shot) dari jalur gameplay normal, sementara deteksi tabrakan tetap menggunakan swept collision pada titik masuk pertama.
 - FR-GF-006 Soft Camera Zoom saat membidik (ditambahkan T-1.6 atas permintaan pengguna; presentasi saja).
   - AC: Saat membidik, kamera zoom-in halus dengan fokus visual pada anak panah; target tetap terlihat; tanpa gerakan mendadak; kembali ke tampilan normal setelah tembakan atau pembatalan bidikan; kamera tidak mengubah kecepatan, arah, skor, collision, atau hasil simulasi.
 
@@ -107,3 +107,4 @@ Setiap requirement memiliki ID, acceptance criteria (AC), tugas implementasi (li
 ## 6. Riwayat Perubahan Spesifikasi
 
 - v0.2 (T-1.6): FR-GF-006 (Soft Camera Zoom) dan FR-AV-007 (Cartoon Wind VFX) ditambahkan atas permintaan dan persetujuan eksplisit pengguna dalam instruksi T-1.6; keduanya presentasi saja (tidak mengubah simulasi). FR-GF-004 diperjelas: prediksi harus melalui BallisticsModel. FR-GF-005 diperjelas: mengikuti ADR-009 (disetujui sementara pengguna; konfigurasi per level).
+- v0.3 (T-1.7): FR-GF-005 diperjelas berdasarkan keputusan desain pemilik proyek untuk risiko R-11 (ADR-011): titik skor dihitung dari kedalaman penetrasi ujung panah ke dalam geometri target, bukan semata titik masuk pertama swept collision; swept collision tetap untuk deteksi dan pemilihan target; nilai zona/combo ADR-009 dipertahankan.

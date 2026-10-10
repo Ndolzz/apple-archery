@@ -1,6 +1,6 @@
 # Apple Archery — Register Risiko
 
-Versi: 0.2 (diperbarui pada T-1.8: mitigasi R-01 via CI; R-11 baru dari bukti run CI)
+Versi: 0.3 (diperbarui pada T-1.7: R-11 teratasi via ADR-011 yang disetujui pemilik proyek)
 
 | ID | Risiko | Dampak | Kemungkinan | Mitigasi |
 |---|---|---|---|---|
@@ -14,4 +14,4 @@ Versi: 0.2 (diperbarui pada T-1.8: mitigasi R-01 via CI; R-11 baru dari bukti ru
 | R-08 | Ukuran save/backup dan migrasi versi | Rendah | Sedang | Save berversi + uji migrasi TP-6.1 |
 | R-09 | Performa pada HP kelas bawah | Sedang | Sedang | Aset ringan, mode performa, pengukuran FPS wajib di Phase 7 |
 | R-10 | Kehilangan progres karena overwrite | Tinggi | Rendah | Commit kecil, backup save, review sebelum push |
-| R-11 | Desain skoring: dengan collision lingkaran dan skor dari titik masuk pertama (ADR-009), titik impact gameplay aktual selalu tepat di tepi target (d = radius) sehingga tembakan nyata selalu mendapat zona terluar (10 poin); zona tengah/pusat tidak pernah tercapai | Tinggi | Pasti (geometri) | Memerlukan keputusan desain pengguna sebelum Phase 2: opsi — radius collision lebih kecil dari radius skor (target "ring" terpisah), skor dari kedalaman penetrasi ujung panah, atau representasi target non-lingkaran. Sementara: implementasi konsisten dengan ADR-009 yang disetujui; TP-1.17 menguji perilaku yang benar saat ini |
+| R-11 | Desain skoring: dengan collision lingkaran dan skor dari titik masuk pertama (ADR-009), titik impact gameplay aktual selalu tepat di tepi target (d = radius) sehingga tembakan nyata selalu mendapat zona terluar (10 poin); zona tengah/pusat tidak pernah tercapai | Tinggi | Pasti (geometri) — kini teratasi | TERATASI (T-1.7): ADR-011 disetujui pemilik proyek — titik skor dihitung dari kedalaman penetrasi ujung panah (S = E + dhat * 0.5 * L; swept collision tetap untuk deteksi/pemilihan target); tembakan melalui pusat menghasilkan Perfect Shot; terverifikasi TP-1.17/TP-1.23 pada run CI #12 (74cded1). Pemantauan lanjutan: keseimbangan nilai skor saat uji perangkat manual |
