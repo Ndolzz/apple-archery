@@ -1,4 +1,4 @@
-## Pengujian modul Phase 1 — TP-1.1 s.d. TP-1.23.
+## Pengujian modul Phase 1 — TP-1.1 s.d. TP-1.24.
 ## Runner mandiri tanpa dependensi addon (NFR-002): dijalankan dengan
 ##   godot --headless --path . --script tests/run_tests.gd
 ## Keluar dengan kode 0 bila seluruh pengujian lulus, 1 bila ada kegagalan.
@@ -33,6 +33,7 @@ func _init() -> void:
     _test_tp_1_21_wind_vfx_mapping()
     _test_tp_1_22_trajectory_preview_uses_model()
     _test_tp_1_23_penetration_scoring_regression()
+    _test_tp_1_24_hud_pure_logic()
     _print_summary()
     quit(1 if _failures.size() > 0 else 0)
 
@@ -398,6 +399,32 @@ func _test_tp_1_23_penetration_scoring_regression() -> void:
         "TP-1.23 penetration computed against the selected (near) target")
     _check(ScoringService.score_hit(multi, t_far).is_empty(),
         "TP-1.23 unselected target does not score")
+
+
+## TP-1.24: logika murni HUD — arah angin, rasio daya, teks umpan balik.
+func _test_tp_1_24_hud_pure_logic() -> void:
+    _check(ArenaHUD.wind_arrow_text(Vector2.ZERO) == "•",
+        "TP-1.24 zero wind shows dot indicator")
+    _check(ArenaHUD.wind_arrow_text(Vector2(4.0, 0.0)) == "→",
+        "TP-1.24 east wind arrow")
+    _check(ArenaHUD.wind_arrow_text(Vector2(-4.0, 0.0)) == "←",
+        "TP-1.24 west wind arrow")
+    _check(ArenaHUD.wind_arrow_text(Vector2(0.0, 4.0)) == "↑",
+        "TP-1.24 north wind arrow (physics y-up)")
+    _check(ArenaHUD.wind_arrow_text(Vector2(3.0, -3.0)) == "↘",
+        "TP-1.24 diagonal southeast wind arrow")
+    _check(absf(ArenaHUD.power_ratio(0.5) - 0.5) < 0.000001,
+        "TP-1.24 power ratio passes through within range")
+    _check(ArenaHUD.power_ratio(-1.0) == 0.0 and ArenaHUD.power_ratio(2.0) == 1.0,
+        "TP-1.24 power ratio clamped to 0..1")
+    _check(ArenaHUD.shot_feedback_text(50, true, 1) == "PERFECT +50",
+        "TP-1.24 perfect shot feedback text")
+    _check(ArenaHUD.shot_feedback_text(20, false, 3) == "+20  x3",
+        "TP-1.24 combo feedback appends multiplier")
+    _check(ArenaHUD.shot_feedback_text(10, false, 1) == "+10",
+        "TP-1.24 plain hit feedback without combo")
+    _check(ArenaHUD.shot_feedback_text(0, false, 0) == "Meleset!",
+        "TP-1.24 miss feedback text")
 
 
 ## TP-1.18: level termuat dari data JSON — 3 level, id unik, parameter benar.
