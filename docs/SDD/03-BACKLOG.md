@@ -18,7 +18,7 @@ Versi: 0.1. Seluruh ID requirement merujuk pada 00-SPEC.md.
 
 - [x] T-1.1 Inisialisasi proyek Godot 4.x (commit 7c5fdb8).
 - [x] T-1.2 BallisticsModel murni: gravitasi, drag, angin, prediksi lintasan (commit 10f5042).
-- [ ] T-1.3 AimController: input tarikan untuk sentuh (FR-GF-001).
+- [x] T-1.3 AimController: input tarikan untuk sentuh (commit 8ae4286).
 - [ ] T-1.4 Arrow node + collision (FR-GF-003).
 - [ ] T-1.5 Target statis dengan zona skoring (FR-GF-005 dasar).
 - [ ] T-1.6 Arena scene tunggal + 3 level percobaan dari data (FR-LV-001 dasar).
@@ -26,6 +26,8 @@ Versi: 0.1. Seluruh ID requirement merujuk pada 00-SPEC.md.
 - [ ] T-1.8 Workflow GitHub Actions: pengujian headless Godot (FR-QA-001).
 - [ ] T-1.9 Pengujian otomatis fisika dan skoring — dijalankan di CI setelah T-1.8.
 - [ ] T-1.10 Gerbang persetujuan: demonstrasi vertikal slice.
+
+Catatan T-1.3 (commit 8ae4286): scripts/core/aim_controller.gd — mesin status bidik murni RefCounted, terpisah dari InputEvent (posisi dikirim caller) dan dari fisika (tidak membuat BallisticsModel, sesuai ADR-002). Mekanika tarik-balik: power = min(len, maxDrag)/maxDrag (kontinu 0..1), arah = normalisasi(start - current), kecepatan = arah * power * maxLaunchSpeed (m/s, konsisten SI dengan BallisticsModel). Validasi: sentuhan di luar play_area ditolak, update saat idle diabaikan, cancel mengembalikan idle, release tanpa aim mengembalikan Dictionary kosong. Bukti verifikasi: pemeriksaan numerik eksternal menemukan dan memperbaiki cacat normalisasi pada rumus awal (kecepatan 53.03 alih-alih 30.0 m/s saat clamp); rumus final terverifikasi numerik (clamp tepat 30.0 m/s, power 0.5 pada tarikan 80/160, arah benar). Pengujian GDScript TP-1.7..TP-1.11 tertulis di tests/run_tests.gd namun belum dijalankan di Godot (menunggu T-1.8); tidak ada klaim lulus runtime.
 
 Catatan T-1.1 (commit 7c5fdb8): proyek Godot 4.3 diinisialisasi — project.godot (orientasi portrait, renderer gl_compatibility, emulasi sentuh dari mouse untuk pengujian desktop), struktur folder lengkap sesuai 01-ARCHITECTURE.md, .gitignore (mengecualikan .godot/, artefak build, dan kredensial keystore), dan ikon placeholder. Verifikasi terbatas pada tinjauan isi berkas; Godot tidak dapat dijalankan lokal (risiko R-01).
 

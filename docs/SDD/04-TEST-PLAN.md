@@ -1,6 +1,6 @@
 # Apple Archery — Test Plan
 
-Versi: 0.1 (Baseline)
+Versi: 0.1.1 (TP-1.7 s.d. TP-1.11 ditambahkan pada T-1.3; lihat catatan bagian 2)
 
 ## 1. Strategi
 
@@ -11,13 +11,20 @@ Versi: 0.1 (Baseline)
 
 ## 2. Pengujian Otomatis (direncanakan per Phase)
 
-### Phase 1 (fisika dan skoring)
+### Phase 1 (fisika, skoring, dan bidik)
 - TP-1.1 BallisticsModel: lintasan tanpa angin cocok dengan solusi analitik parabola (toleransi).
 - TP-1.2 BallisticsModel: drag mengurangi jangkauan dibanding tanpa drag.
 - TP-1.3 BallisticsModel: angin arah positif/negatif menggeser titik impact sesuai tanda.
 - TP-1.4 Prediksi lintasan: titik pertama sama dengan posisi awal; jumlah titik sesuai konfigurasi.
 - TP-1.5 Skoring: zona pusat > zona tepi; Perfect Shot terdeteksi pada pusat.
 - TP-1.6 Combo: bertambah pada hit berturut-turut; reset saat meleset.
+- TP-1.7 AimController: begin_aim di dalam area berhasil; status aiming aktif; drag awal nol.
+- TP-1.8 AimController: power dan arah kontinu mengikuti input; arah tembakan berlawanan arah tarikan; release mengakhiri status aiming.
+- TP-1.9 AimController: tarikan melewati batas maksimum dikunci pada power 1.0 dan kecepatan maksimum; arah tetap benar.
+- TP-1.10 AimController: pembatalan mengembalikan status idle; release setelah batal tidak menghasilkan tembakan.
+- TP-1.11 AimController: sentuhan di luar area permainan ditolak; release tanpa menarik mengembalikan hasil kosong.
+
+Catatan TP-1.7 s.d. TP-1.11 (ditambahkan pada T-1.3): acceptance criteria FR-GF-001 (kontinuitas tarikan, batas maksimum, pembatalan, sentuhan di luar area) memerlukan metode pengujian otomatis karena sebelumnya hanya tercantum pengujian manual. Ini penambahan metode pengujian, bukan perubahan requirement.
 
 ### Phase 2-6
 - TP-2.1 Pemuatan data level: semua level valid (target ada, parameter dalam rentang).
