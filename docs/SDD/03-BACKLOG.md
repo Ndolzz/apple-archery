@@ -2,7 +2,7 @@
 
 Versi: 0.1. Seluruh ID requirement merujuk pada 00-SPEC.md.
 
-## Phase 0 — Baseline SDD (SELESAI, menunggu persetujuan)
+## Phase 0 — Baseline SDD (SELESAI)
 
 - [x] T-0.1 Audit repositori (hasil: kosong, tanpa branch/commit).
 - [x] T-0.2 Membuat spesifikasi (00-SPEC).
@@ -16,18 +16,20 @@ Versi: 0.1. Seluruh ID requirement merujuk pada 00-SPEC.md.
 
 ## Phase 1 — Vertical Slice (FR-GF-001..005, FR-LV-001 parsial)
 
-- [x] T-1.1 Inisialisasi proyek Godot 4.x (project.godot, struktur folder, .gitignore, .gdlintrc bila tersedia).
-- [ ] T-1.2 BallisticsModel murni: gravitasi, drag, angin, prediksi lintasan (FR-GF-002, FR-GF-004).
+- [x] T-1.1 Inisialisasi proyek Godot 4.x (commit 7c5fdb8).
+- [x] T-1.2 BallisticsModel murni: gravitasi, drag, angin, prediksi lintasan (commit 10f5042).
 - [ ] T-1.3 AimController: input tarikan untuk sentuh (FR-GF-001).
 - [ ] T-1.4 Arrow node + collision (FR-GF-003).
 - [ ] T-1.5 Target statis dengan zona skoring (FR-GF-005 dasar).
 - [ ] T-1.6 Arena scene tunggal + 3 level percobaan dari data (FR-LV-001 dasar).
 - [ ] T-1.7 HUD minimal: skor, angin, tombol prediksi.
 - [ ] T-1.8 Workflow GitHub Actions: pengujian headless Godot (FR-QA-001).
-- [ ] T-1.9 Pengujian otomatis fisika dan skoring.
+- [ ] T-1.9 Pengujian otomatis fisika dan skoring — dijalankan di CI setelah T-1.8.
 - [ ] T-1.10 Gerbang persetujuan: demonstrasi vertikal slice.
 
 Catatan T-1.1 (commit 7c5fdb8): proyek Godot 4.3 diinisialisasi — project.godot (orientasi portrait, renderer gl_compatibility, emulasi sentuh dari mouse untuk pengujian desktop), struktur folder lengkap sesuai 01-ARCHITECTURE.md, .gitignore (mengecualikan .godot/, artefak build, dan kredensial keystore), dan ikon placeholder. Verifikasi terbatas pada tinjauan isi berkas; Godot tidak dapat dijalankan lokal (risiko R-01).
+
+Catatan T-1.2 (commit 10f5042): scripts/physics/ballistics_model.gd — kelas murni RefCounted (ADR-002), satuan SI terdokumentasi pada header, model a = g - k*(v - wind), integrasi semi-implicit Euler timestep tetap (deterministik, pra-syarat Ghost Replay), validasi batas input (drag < 0, dt <= 0, point_count). tests/run_tests.gd — runner mandiri tanpa dependensi addon untuk TP-1.1..TP-1.4, dijalankan headless. Bukti verifikasi: algoritma identik diperiksa silang secara numerik (seluruh properti TP-1.1..TP-1.4 terpenuhi), namun pengujian GDScript belum dijalankan di Godot karena workflow CI belum ada (T-1.8); eksekusi riil menunggu T-1.8/T-1.9. Tidak ada klaim tes lulus sebelum dijalankan.
 
 ## Phase 2 — Kampanye dan Level (FR-LV-002..006)
 
