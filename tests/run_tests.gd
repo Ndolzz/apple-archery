@@ -1,5 +1,5 @@
-## Pengujian BallisticsModel, AimController, CollisionService, dan Arrow — TP-1.1 s.d. TP-1.16.
-## Runner mandiri tanpa dependensi addon (NFR-002): dijalankan dengan
+## Pengujian BallisticsModel, AimController, CollisionService, Arrow, Target, ScoringService —
+## TP-1.1 s.d. TP-1.17. Runner mandiri tanpa dependensi addon (NFR-002): dijalankan dengan
 ##   godot --headless --path . --script tests/run_tests.gd
 ## Keluar dengan kode 0 bila seluruh pengujian lulus, 1 bila ada kegagalan.
 
@@ -24,6 +24,9 @@ func _init() -> void:
     _test_tp_1_14_arrow_flight_consistency()
     _test_tp_1_15_arrow_sticks_on_hit()
     _test_tp_1_16_arrow_invalid_launch_and_reset()
+    _test_tp_1_5_scoring_zones_and_perfect()
+    _test_tp_1_6_combo_sequence()
+    _test_tp_1_17_scoring_boundaries_and_no_double()
     _print_summary()
     quit(1 if _failures.size() > 0 else 0)
 
@@ -219,6 +222,94 @@ func _test_tp_1_16_arrow_invalid_launch_and_reset() -> void:
     _check(arrow.launch(Vector2(1.0, 1.0), Vector2(5.0, 5.0)), "TP-1.16 launch works after reset")
 
 
+## TP-1.5: zona skor — pusat tertinggi, tiap zona benar, Perfect Shot terdeteksi.
+func _test_tp_1_5_scoring_zones_and_perfect() -> void:
+    var t := Target.new("t1", Vector2(10.0, 5.0), 3.0)
+    _check(t.is_valid(), "TP-1.5 target with default zones is valid")
+    var center := ScoringService.classify(t, Vector2(10.0, 5.0))
+    _check(not center.is_empty() and int(center.points) == 50 and bool(center.is_perfect),
+        "TP-1.5 center scores highest zone (50) and is Perfect Shot")
+    var inner_edge := ScoringService.classify(t, Vector2(10.0, 6.0))
+    _check(not inner_edge.is_empty() and int(inner_edge.points) == 50,
+        "TP-1.5 inner zone boundary (d=1.0, frac 1/3 * 3) scores 50")
+    var middle := ScoringService.classify(t, Vector2(10.0, 6.5))
+    _check(not middle.is_empty() and int(middle.points) == 20 and not bool(middle.is_perfect),
+        "TP-1.5 middle zone scores 20, not perfect")
+    var outer := ScoringService.classify(t, Vector2(10.0, 7.5))
+    _check(not outer.is_empty() and int(outer.points) == 10,
+        "TP-1.5 outer zone scores 10")
+    var missed := ScoringService.classify(t, Vector2(10.0, 8.1))
+    _check(missed.is_empty(), "TP-1.5 point outside target scores nothing")
+    var invalid := Target.new("t2", Vector2(0.0, 0.0), -1.0)
+    _check(not invalid.is_valid(), "TP-1.5 invalid target rejected")
+    _check(ScoringService.classify(invalid, Vector2.ZERO).is_empty(), "TP-1.5 invalid target gives no score")
+    var wrong_id := ScoringService.score_hit({"point": Vector2(10.0, 5.0), "id": "other"}, t)
+    _check(wrong_id.is_empty(), "TP-1.5 score_hit with mismatched target id returns empty")
+
+
+## TP-1.6: combo bertambah pada hit berturut-turut, reset saat meleset.
+func _test_tp_1_6_combo_sequence() -> void:
+    var s := ScoringService.new()
+    _check(s.register_shot(true) == 1, "TP-1.6 first hit: combo 1")
+    _check(s.register_shot(true) == 2, "TP-1.6 second consecutive hit: combo 2")
+    _check(s.register_shot(true) == 3, "TP-1.6 third consecutive hit: combo 3")
+    _check(s.register_shot(false) == 0, "TP-1.6 miss resets combo to 0")
+    _check(s.register_shot(true) == 1, "TP-1.6 hit after miss: combo 1")
+    _check(s.best_combo == 3, "TP-1.6 best combo retained (3)")
+    s.reset()
+    _check(s.combo == 0 and s.best_combo == 0, "TP-1.6 reset clears combo and best combo")
+    _check(ScoringService.combo_points(50, 1) == 50, "TP-1.6 combo 1 gives no multiplier")
+    _check(ScoringService.combo_points(50, 3) == 75, "TP-1.6 combo 3 multiplies base by 1.5 (75)")
+
+
+## TP-1.17: batas antarzona inklusif; skor dari titik masuk pertama; tanpa skor ganda.
+func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
+    var t := Target.new("t17", Vector2(10.0, 5.0), 3.0)
+    var exact_outer := ScoringService.classify(t, Vector2(10.0, 8.0))
+    _check(not exact_outer.is_empty() and int(exact_outer.points) == 10,
+        "TP-1.17 exact outer edge (d == radius) is inclusive and scores outer zone")
+    var just_inside := ScoringService.classify(t, Vector2(10.0, 5.0 + 2.0 / 3.0 + 0.001))
+    _check(not just_inside.is_empty() and int(just_inside.points) == 10,
+        "TP-1.17 just outside middle boundary scores outer zone, not middle")
+    var middle_edge := ScoringService.classify(t, Vector2(10.0, 5.0 + 2.0))
+    _check(not middle_edge.is_empty() and int(middle_edge.points) == 20,
+        "TP-1.17 exact middle boundary (d == 2.0) is inclusive to middle zone")
+
+    # Skor dihitung dari titik masuk pertama collision, bukan posisi akhir panah.
+    var hit := CollisionService.segment_circle_first_hit(
+        Vector2(0.0, 5.0), Vector2(20.0, 5.0), Vector2(10.0, 5.0), 3.0
+    )
+    _check(not hit.is_empty(), "TP-1.17 swept hit detected")
+    var scored := ScoringService.score_hit(hit, t)
+    _check(not scored.is_empty() and int(scored.points) == 50 and bool(scored.is_perfect),
+        "TP-1.17 score from first-entry point (x=7, zone 0), not final position (x=20)")
+
+    # Panah STUCK tidak menghasilkan skor baru.
+    var arrow := Arrow.new()
+    var s := ScoringService.new()
+    arrow.targets = [t.to_collision_dict()]
+    arrow.launch(Vector2(0.0, 5.0), Vector2(30.0, 0.0), Vector2(0.0, -9.8))
+    var first_result := arrow.advance(0.5)
+    _check(not first_result.is_empty(), "TP-1.17 first advance produces a hit")
+    _check(s.register_shot(not first_result.is_empty()) == 1, "TP-1.17 combo registered once")
+    var second_result := arrow.advance(1.0)
+    _check(second_result.is_empty(), "TP-1.17 stuck arrow produces no second hit")
+    _check(s.register_shot(not second_result.is_empty()) == 0, "TP-1.17 empty result resets combo (no double score)")
+
+    # Beberapa target dalam satu langkah: target pertama sepanjang jalur yang dinilai.
+    var t_near := Target.new("near", Vector2(8.0, 5.0), 1.0)
+    var t_far := Target.new("far", Vector2(16.0, 5.0), 1.0)
+    var multi_hit := CollisionService.segment_targets_first_hit(
+        Vector2(0.0, 5.0), Vector2(30.0, 5.0),
+        [t_far.to_collision_dict(), t_near.to_collision_dict()]
+    )
+    _check(not multi_hit.is_empty() and String(multi_hit.id) == "near",
+        "TP-1.17 multi-target: first target along path selected")
+    var multi_score := ScoringService.score_hit(multi_hit, t_near)
+    _check(not multi_score.is_empty() and bool(multi_score.is_perfect),
+        "TP-1.17 multi-target: score computed from selected target (near)")
+
+
 ## Simulasi hingga panah kembali ke ketinggian awal.
 func _range_until_ground(v0: Vector2, g: Vector2, wind: Vector2, drag: float, dt: float) -> float:
     var m := BallisticsModel.new(Vector2.ZERO, v0, g, wind, drag)
@@ -234,6 +325,6 @@ func _range_until_ground(v0: Vector2, g: Vector2, wind: Vector2, drag: float, dt
 
 func _print_summary() -> void:
     print("")
-    print("BallisticsModel + AimController + CollisionService + Arrow tests: %d passed, %d failed" % [_passed, _failures.size()])
+    print("Ballistics + Aim + Collision + Arrow + Target + Scoring tests: %d passed, %d failed" % [_passed, _failures.size()])
     for label in _failures:
         print("  FAILED: %s" % label)
