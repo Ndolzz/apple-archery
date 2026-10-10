@@ -8,9 +8,13 @@
 ## adalah titik masuk pertama panah ke target (bukan titik terdalam). Bila panah sudah
 ## berada di dalam target (C <= 0), impact pada posisi awal segmen (t = 0).
 ##
+## ADR-011 (T-1.7): hasil tabrakan menyertakan "direction" — arah segmen ternormalisasi
+## saat hit — sehingga ScoringService dapat menghitung titik skor dari kedalaman
+## penetrasi. Deteksi tabrakan dan pemilihan target (t terkecil) tidak berubah.
+##
 ## Satuan: konsisten SI dengan BallisticsModel (meter). Semua fungsi tanpa efek samping.
 ##
-## Requirement: FR-GF-003. Pengujian: TP-1.12, TP-1.13 (04-TEST-PLAN).
+## Requirement: FR-GF-003. Pengujian: TP-1.12, TP-1.13, TP-1.23 (04-TEST-PLAN).
 
 class_name CollisionService
 extends RefCounted
@@ -18,7 +22,9 @@ extends RefCounted
 const EPSILON := 0.000001
 
 
-## Hasil: {hit: bool, t: float, point: Vector2}. t = parameter segmen [0..1].
+## Hasil: {hit: bool, t: float, point: Vector2, direction: Vector2}.
+## t = parameter segmen [0..1]; point = titik masuk pertama; direction = arah
+## segmen ternormalisasi (Vector2.ZERO bila segmen degenerate) untuk penetrasi (ADR-011).
 ## Dictionary kosong berarti tidak ada tabrakan.
 static func segment_circle_first_hit(
     p_from: Vector2,
@@ -32,12 +38,15 @@ static func segment_circle_first_hit(
     var d := p_to - p_from
     var f := p_from - p_center
     var a := d.dot(d)
+    var direction := Vector2.ZERO
+    if a >= EPSILON:
+        direction = d / sqrt(a)
     if a < EPSILON:
         if f.length() <= p_radius:
-            return {"hit": true, "t": 0.0, "point": p_from}
+            return {"hit": true, "t": 0.0, "point": p_from, "direction": direction}
         return {}
     if f.length() <= p_radius:
-        return {"hit": true, "t": 0.0, "point": p_from}
+        return {"hit": true, "t": 0.0, "point": p_from, "direction": direction}
     var b := 2.0 * f.dot(d)
     var c := f.dot(f) - p_radius * p_radius
     var disc := b * b - 4.0 * a * c
@@ -53,7 +62,7 @@ static func segment_circle_first_hit(
         t = t2
     if t < 0.0:
         return {}
-    return {"hit": true, "t": t, "point": p_from + d * t}
+    return {"hit": true, "t": t, "point": p_from + d * t, "direction": direction}
 
 
 ## Periksa segmen terhadap daftar target {position: Vector2, radius: float, id: Variant}.

@@ -1,4 +1,4 @@
-## Pengujian modul Phase 1 — TP-1.1 s.d. TP-1.22.
+## Pengujian modul Phase 1 — TP-1.1 s.d. TP-1.23.
 ## Runner mandiri tanpa dependensi addon (NFR-002): dijalankan dengan
 ##   godot --headless --path . --script tests/run_tests.gd
 ## Keluar dengan kode 0 bila seluruh pengujian lulus, 1 bila ada kegagalan.
@@ -32,6 +32,7 @@ func _init() -> void:
     _test_tp_1_20_camera_zoom_logic()
     _test_tp_1_21_wind_vfx_mapping()
     _test_tp_1_22_trajectory_preview_uses_model()
+    _test_tp_1_23_penetration_scoring_regression()
     _print_summary()
     quit(1 if _failures.size() > 0 else 0)
 
@@ -284,7 +285,7 @@ func _test_tp_1_16_arrow_invalid_launch_and_reset() -> void:
     _check(arrow.launch(Vector2(1.0, 1.0), Vector2(5.0, 5.0)), "TP-1.16 launch works after reset")
 
 
-## TP-1.17: batas antarzona inklusif; skor dari titik masuk pertama; tanpa skor ganda.
+## TP-1.17: batas antarzona inklusif; skor dari penetrasi (ADR-011); tanpa skor ganda.
 func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
     var t := Target.new("t17", Vector2(10.0, 5.0), 3.0)
     var exact_outer := ScoringService.classify(t, Vector2(10.0, 8.0))
@@ -300,15 +301,12 @@ func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
         Vector2(0.0, 5.0), Vector2(20.0, 5.0), [t.to_collision_dict()]
     )
     _check(not hit.is_empty(), "TP-1.17 swept hit detected")
-    # Titik masuk pertama lingkaran selalu berada tepat pada radius (x=7, d=3.0),
-    # sehingga menurut ADR-009 (batas inklusif zona dalam) zona yang didapat adalah
-    # zona terluar (10 poin), bukan perfect. Ekspektasi lama (50/perfect) bertentangan
-    # dengan ADR-009; catatan desain terkait dicatat di 06-RISKS.md (T-1.8).
-    # score_hit membutuhkan "id" target; segment_targets_first_hit menyertakannya
-    # (segment_circle_first_hit tunggal tidak menyertakan "id" — akar kegagalan ini).
+    # ADR-011: skor dari kedalaman penetrasi, bukan titik masuk. Tembakan
+    # horizontal melalui pusat menembus hingga titik tengah chord = pusat
+    # → Perfect Shot. Titik masuk (x=7) hanya menentukan target dan arah datang.
     var scored := ScoringService.score_hit(hit, t)
-    _check(not scored.is_empty() and int(scored.points) == 10 and not bool(scored.is_perfect),
-        "TP-1.17 score from first-entry point (x=7, d=3.0) gives inclusive outer zone (10)")
+    _check(not scored.is_empty() and int(scored.points) == 50 and bool(scored.is_perfect),
+        "TP-1.17 center-directed shot scores Perfect (50) via penetration (ADR-011)")
     _check(ScoringService.classify(t, Vector2(20.0, 5.0)).is_empty(),
         "TP-1.17 final position (x=20) is outside target and would score nothing")
     var arrow := Arrow.new()
@@ -330,10 +328,76 @@ func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
     _check(not multi_hit.is_empty() and String(multi_hit.id) == "near",
         "TP-1.17 multi-target: first target along path selected")
     var multi_score := ScoringService.score_hit(multi_hit, t_near)
-    _check(not multi_score.is_empty() and int(multi_score.points) == 10 and not bool(multi_score.is_perfect),
-        "TP-1.17 multi-target: score computed from selected target (near, entry at its outer edge)")
+    _check(not multi_score.is_empty() and int(multi_score.points) == 50 and bool(multi_score.is_perfect),
+        "TP-1.17 multi-target: penetration through near target center scores Perfect (50)")
     _check(ScoringService.score_hit(multi_hit, t_far).is_empty(),
         "TP-1.17 multi-target: selected target used, not the far one")
+
+
+## TP-1.23: regresi skoring penetrasi (ADR-011).
+func _test_tp_1_23_penetration_scoring_regression() -> void:
+    var t := Target.new("t23", Vector2(10.0, 5.0), 3.0)
+    # 1) Titik masuk collision tidak otomatis menentukan skor akhir.
+    var rim_hit := CollisionService.segment_targets_first_hit(
+        Vector2(0.0, 5.0), Vector2(20.0, 5.0), [t.to_collision_dict()]
+    )
+    _check(not rim_hit.is_empty() and rim_hit.point.distance_to(Vector2(7.0, 5.0)) < 0.001,
+        "TP-1.23 entry point is on rim (x=7) — not the score point")
+    var perfect := ScoringService.score_hit(rim_hit, t)
+    _check(not perfect.is_empty() and int(perfect.points) == 50 and bool(perfect.is_perfect),
+        "TP-1.23 penetration toward center yields center zone Perfect (50)")
+    # 2) Penetrasi dangkal menghasilkan zona luar (garis y=7.5, S=(10,7.5), d=2.5).
+    var shallow_hit := CollisionService.segment_targets_first_hit(
+        Vector2(0.0, 7.5), Vector2(20.0, 7.5), [t.to_collision_dict()]
+    )
+    var shallow := ScoringService.score_hit(shallow_hit, t)
+    _check(not shallow.is_empty() and int(shallow.points) == 10 and not bool(shallow.is_perfect),
+        "TP-1.23 shallow penetration scores outer zone (10)")
+    # 3) Tembakan dari arah berlawanan simetris terhadap geometri.
+    var reverse_hit := CollisionService.segment_targets_first_hit(
+        Vector2(20.0, 5.0), Vector2(0.0, 5.0), [t.to_collision_dict()]
+    )
+    var reverse := ScoringService.score_hit(reverse_hit, t)
+    _check(not reverse.is_empty() and int(reverse.points) == 50 and bool(reverse.is_perfect),
+        "TP-1.23 opposite-direction center shot is symmetric (Perfect 50)")
+    # 4) Tabrakan tangensial / arah nol: titik skor = titik masuk (tepi, inklusif).
+    var tangential := ScoringService.score_hit(
+        {"point": Vector2(10.0, 8.0), "id": "t23", "direction": Vector2.ZERO}, t
+    )
+    _check(not tangential.is_empty() and int(tangential.points) == 10,
+        "TP-1.23 tangential hit (zero direction) scores from rim entry (10, inclusive)")
+    # 5) Tembakan meleset tidak menghasilkan skor.
+    var miss_hit := CollisionService.segment_targets_first_hit(
+        Vector2(0.0, 20.0), Vector2(20.0, 20.0), [t.to_collision_dict()]
+    )
+    _check(miss_hit.is_empty() and ScoringService.score_hit(miss_hit, t).is_empty(),
+        "TP-1.23 miss produces no score")
+    # 6) Satu panah tidak dapat menghasilkan skor lebih dari sekali.
+    var arrow := Arrow.new()
+    var s := ScoringService.new()
+    arrow.targets = [t.to_collision_dict()]
+    arrow.launch(Vector2(0.0, 5.0), Vector2(30.0, 0.0), Vector2(0.0, -9.8))
+    var first_result := arrow.advance(0.5)
+    var second_result := arrow.advance(1.0)
+    _check(not first_result.is_empty() and second_result.is_empty(),
+        "TP-1.23 stuck arrow yields exactly one scoring result")
+    _check(s.register_shot(not first_result.is_empty()) == 1
+        and s.register_shot(not second_result.is_empty()) == 0,
+        "TP-1.23 combo registers once, no double score")
+    # 7) Target pertama sepanjang jalur tetap dipilih secara konsisten.
+    var t_near := Target.new("near23", Vector2(8.0, 5.0), 1.0)
+    var t_far := Target.new("far23", Vector2(16.0, 5.0), 1.0)
+    var multi := CollisionService.segment_targets_first_hit(
+        Vector2(0.0, 5.0), Vector2(30.0, 5.0),
+        [t_far.to_collision_dict(), t_near.to_collision_dict()]
+    )
+    _check(not multi.is_empty() and String(multi.id) == "near23",
+        "TP-1.23 first target along path consistently selected")
+    var multi_score := ScoringService.score_hit(multi, t_near)
+    _check(not multi_score.is_empty() and bool(multi_score.is_perfect),
+        "TP-1.23 penetration computed against the selected (near) target")
+    _check(ScoringService.score_hit(multi, t_far).is_empty(),
+        "TP-1.23 unselected target does not score")
 
 
 ## TP-1.18: level termuat dari data JSON — 3 level, id unik, parameter benar.
