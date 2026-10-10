@@ -17,12 +17,12 @@ env:
 jobs:
   test:
     name: Headless import, parse check, and tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Godot 4.3-stable (pinned to project target version)
         run: |
@@ -33,31 +33,56 @@ jobs:
           sudo chmod +x /usr/local/bin/godot
           godot --version
 
-      # Step 1: import all resources. Fails the job if the project cannot be
-      # loaded or resource import fails.
+      # Step 1: import all resources, then fail if the log contains script or
+      # resource load errors. Matched log lines are emitted as annotations for
+      # public traceability (logs require authentication).
       - name: Import project resources (headless)
         run: |
           set -euxo pipefail
           godot --headless --path . --import 2>&1 | tee import.log
-          ! grep -E "SCRIPT ERROR|Parse Error|Failed to load" import.log
+          if grep -nE "SCRIPT ERROR|Parse Error|Failed to load" import.log > import_matches.txt; then
+            head -5 import_matches.txt | while IFS= read -r line; do
+              echo "::error::IMPORT-ERROR-MATCH: ${line:0:250}"
+            done
+            echo "::error::Import log contained error matches; see annotations"
+            exit 1
+          fi
 
       # Step 2: parse check every GDScript file. Any parse failure fails the job.
+      # (if: always() so a single diagnostic run collects all evidence.)
       - name: Parse check all GDScript files
+        if: always()
         run: |
-          set -euxo pipefail
+          set -uxo pipefail
           status=0
           for script in $(git ls-files '*.gd'); do
-            echo "Parsing res://$script"
-            godot --headless --path . --check-only --script "res://$script" || status=1
+            if godot --headless --path . --check-only --script "res://$script" > "parse_$script.log" 2>&1; then
+              echo "Parsed OK: res://$script"
+            else
+              echo "::error::PARSE-FAIL res://$script (see log tail in annotations)"
+              tail -5 "parse_$script.log" | while IFS= read -r line; do
+                echo "::error::PARSE-FAIL res://$script :: ${line:0:230}"
+              done
+              status=1
+            fi
           done
           exit $status
 
       # Step 3: run the full headless test suite. Runner exits nonzero on any
       # test failure; pipefail propagates the Godot exit code through tee.
       - name: Run headless test suite (TP-1.1 .. TP-1.22)
+        if: always()
         run: |
-          set -euxo pipefail
+          set -uxo pipefail
           godot --headless --path . --script tests/run_tests.gd 2>&1 | tee test_output.log
+          status=${PIPESTATUS[0]}
+          grep '^FAIL:' test_output.log | head -10 | while IFS= read -r line; do
+            echo "::error::TEST-FAIL: ${line:0:250}"
+          done
+          grep -E 'Phase 1 module tests' test_output.log | while IFS= read -r line; do
+            echo "::error::TEST-SUMMARY: ${line:0:250}"
+          done
+          exit $status
 
       # Step 4: traceability guard — verify that all 22 TP-1.x test groups
       # actually executed and that no check reported FAIL.
@@ -69,6 +94,7 @@ jobs:
           failed=$(grep -c '^FAIL:' test_output.log || true)
           echo "Distinct TP-1.x groups with at least one PASS: ${found} (expected 22)"
           echo "Failed checks: ${failed} (expected 0)"
+          echo "::error::VERIFY: found=${found}/22 TP groups, failed checks=${failed}"
           test "$found" -eq 22
           test "$failed" -eq 0
 
