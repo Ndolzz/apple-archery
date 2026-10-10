@@ -76,21 +76,30 @@ jobs:
           exit ${PIPESTATUS[0]}
 
       # Step 4: traceability guard — all 22 TP-1.x groups must have executed
-      # (PASS or FAIL), no check may report FAIL, and every failing check is
-      # emitted as a public annotation for traceable evidence.
+      # (PASS or FAIL), no check may report FAIL, and results are written to
+      # the public job summary for verifiable evidence.
       - name: Verify all TP-1.x groups executed with zero failures
         if: always()
         run: |
           set -euxo pipefail
-          found=$(grep -oE '^(PASS|FAIL): TP-1\.[0-9]+' test_output.log | grep -oE 'TP-1\.[0-9]+' | sort -u | wc -l || true)
+          found=$(grep -oE '^(PASS|FAIL): TP-1\.[0-9]+' test_output.log | grep -oE 'TP-1\.[0-9]+' | sort -u | wc -l)
           passed=$(grep -c '^PASS:' test_output.log || true)
           failed=$(grep -c '^FAIL:' test_output.log || true)
-          echo "Distinct TP-1.x groups executed: ${found} (expected 22)"
-          echo "Checks passed: ${passed}; checks failed: ${failed} (expected 0)"
-          echo "::error::VERIFY: groups=${found}/22, passed=${passed}, failed=${failed}"
-          grep '^FAIL:' test_output.log | head -10 | while IFS= read -r line; do
+          {
+            echo "## Test results"
+            echo ""
+            grep -E 'Phase 1 module tests' test_output.log || true
+            echo ""
+            echo "- Distinct TP-1.x groups executed: ${found} / 22 (expected 22)"
+            echo "- Checks passed: ${passed}"
+            echo "- Checks failed: ${failed} (expected 0)"
+            echo ""
+            echo "Godot version: ${GODOT_VERSION}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          grep '^FAIL:' test_output.log | head -10 > failed_checks.txt || true
+          while IFS= read -r line; do
             echo "::error::VERIFY-FAILED-CHECK ${line:0:250}"
-          done
+          done < failed_checks.txt
           for n in $(seq 1 22); do
             if ! grep -qE "^(PASS|FAIL): TP-1\.$n" test_output.log; then
               echo "::error::VERIFY: TP-1.$n did not execute at all"
