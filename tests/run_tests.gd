@@ -251,13 +251,16 @@ func _test_tp_1_14_arrow_flight_consistency() -> void:
 func _test_tp_1_15_arrow_sticks_on_hit() -> void:
     var arrow := Arrow.new()
     arrow.targets = [{"position": Vector2(12.0, 0.0), "radius": 0.5, "id": "t1"}]
-    var hit_detected: Dictionary = {}
-    arrow.hit_target.connect(func(result: Dictionary) -> void: hit_detected = result)
+    var hit_detected: Array = []
+    arrow.hit_target.connect(func(result: Dictionary) -> void: hit_detected.append(result))
     arrow.launch(Vector2.ZERO, Vector2(24.0, 0.0), Vector2.ZERO)
     for i in range(30):
         arrow.advance(1.0 / 60.0)
     _check(arrow.is_stuck(), "TP-1.15 arrow is stuck after hit")
-    _check(not hit_detected.is_empty(), "TP-1.15 hit_target signal emitted")
+    # Lambda GDScript menangkap variabel lokal secara nilai; mutasi Array yang
+    # ditangkap tetap terlihat dari luar, berbeda dengan penetapan ulang variabel.
+    _check(not hit_detected.is_empty() and not (hit_detected[0] as Dictionary).is_empty(),
+        "TP-1.15 hit_target signal emitted")
     _check(arrow.position.distance_to(Vector2(11.5, 0.0)) < 0.001,
         "TP-1.15 arrow sticks at first-entry point (x=11.5, tolerance float32 1 mm)")
     var stuck_pos: Vector2 = arrow.position
@@ -293,14 +296,16 @@ func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
     var middle_edge := ScoringService.classify(t, Vector2(10.0, 5.0 + 2.0))
     _check(not middle_edge.is_empty() and int(middle_edge.points) == 20,
         "TP-1.17 exact middle boundary (d == 2.0) is inclusive to middle zone")
-    var hit := CollisionService.segment_circle_first_hit(
-        Vector2(0.0, 5.0), Vector2(20.0, 5.0), Vector2(10.0, 5.0), 3.0
+    var hit := CollisionService.segment_targets_first_hit(
+        Vector2(0.0, 5.0), Vector2(20.0, 5.0), [t.to_collision_dict()]
     )
     _check(not hit.is_empty(), "TP-1.17 swept hit detected")
     # Titik masuk pertama lingkaran selalu berada tepat pada radius (x=7, d=3.0),
     # sehingga menurut ADR-009 (batas inklusif zona dalam) zona yang didapat adalah
     # zona terluar (10 poin), bukan perfect. Ekspektasi lama (50/perfect) bertentangan
     # dengan ADR-009; catatan desain terkait dicatat di 06-RISKS.md (T-1.8).
+    # score_hit membutuhkan "id" target; segment_targets_first_hit menyertakannya
+    # (segment_circle_first_hit tunggal tidak menyertakan "id" — akar kegagalan ini).
     var scored := ScoringService.score_hit(hit, t)
     _check(not scored.is_empty() and int(scored.points) == 10 and not bool(scored.is_perfect),
         "TP-1.17 score from first-entry point (x=7, d=3.0) gives inclusive outer zone (10)")
