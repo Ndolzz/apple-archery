@@ -1,16 +1,16 @@
 # Apple Archery — Traceability Matrix
 
-Versi: 0.1.5 (diperbarui setelah T-1.6; FR-GF-006 dan FR-AV-007 baru — spesifikasi v0.2; kolom Status memisahkan "terimplementasi" dan "terverifikasi di CI").
+Versi: 0.1.6 (diperbarui setelah T-1.8: TP-1.1..TP-1.22 lulus di CI run CI #8, commit 1b954a0; FR-QA-001 terealisasikan)
 
 | Requirement | Tugas (03-BACKLOG) | Pengujian (04-TEST-PLAN) | Fase | Status |
 |---|---|---|---|---|
-| FR-GF-001 Tarikan busur | T-1.3 | TP-1.7..TP-1.11, Manual P1 | 1 | Terimplementasi (8ae4286); eksekusi menunggu CI |
-| FR-GF-002 Fisika realistis | T-1.2 | TP-1.1, TP-1.2, TP-1.3 | 1 | Terimplementasi (10f5042); eksekusi menunggu CI |
-| FR-GF-003 Collision | T-1.4 | TP-1.12..TP-1.16, Manual P1 | 1 | Terimplementasi (31596a7); eksekusi menunggu CI |
-| FR-GF-004 Prediksi lintasan | T-1.2, T-1.6 | TP-1.4, TP-1.22, Manual P1 | 1 | Terimplementasi (10f5042, 52094d); eksekusi menunggu CI |
-| FR-GF-005 Skoring/Perfect/combo | T-1.5 | TP-1.5, TP-1.6, TP-1.17, Manual P1 | 1 | Terimplementasi (d5d68ca, 23cc967); ADR-009 disetujui sementara; eksekusi menunggu CI |
-| FR-GF-006 Soft camera zoom (v0.2) | T-1.6 | TP-1.20, Manual P1 | 1 | Terimplementasi (9e07151); eksekusi menunggu CI |
-| FR-LV-001 Level bertahap (dasar) | T-1.6, T-2.6 | TP-1.18, TP-1.19, TP-2.1 | 1-2 | Dasar terimplementasi: 3 level dari data (9e07151); eksekusi menunggu CI |
+| FR-GF-001 Tarikan busur | T-1.3 | TP-1.7..TP-1.11, Manual P1 | 1 | Terverifikasi di CI (8ae4286; run CI #8 lulus; uji manual menyusul) |
+| FR-GF-002 Fisika realistis | T-1.2 | TP-1.1, TP-1.2, TP-1.3 | 1 | Terverifikasi di CI (10f5042; run CI #8 lulus) |
+| FR-GF-003 Collision | T-1.4 | TP-1.12..TP-1.16, Manual P1 | 1 | Terverifikasi di CI (31596a7; run CI #8 lulus; uji manual menyusul) |
+| FR-GF-004 Prediksi lintasan | T-1.2, T-1.6 | TP-1.4, TP-1.22, Manual P1 | 1 | Terverifikasi di CI (10f5042, 52094d; run CI #8 lulus) |
+| FR-GF-005 Skoring/Perfect/combo | T-1.5 | TP-1.5, TP-1.6, TP-1.17, Manual P1 | 1 | Terverifikasi di CI (d5d68ca, 23cc967; run CI #8 lulus); catatan desain R-11 menunggu keputusan pengguna |
+| FR-GF-006 Soft camera zoom (v0.2) | T-1.6 | TP-1.20, Manual P1 | 1 | Terverifikasi di CI (9e07151; run CI #8 lulus; uji manual menyusul) |
+| FR-LV-001 Level bertahap (dasar) | T-1.6, T-2.6 | TP-1.18, TP-1.19, TP-2.1 | 1-2 | Dasar terverifikasi di CI: 3 level dari data (9e07151; run CI #8 lulus) |
 | FR-LV-002 Peta dunia | T-2.1 | Manual P2 | 2 | Belum |
 | FR-LV-003 Target bergerak | T-2.2 | Manual P2 | 2 | Belum |
 | FR-LV-004 Rintangan/puzzle | T-2.3 | Manual P2 | 2 | Belum |
@@ -36,7 +36,7 @@ Versi: 0.1.5 (diperbarui setelah T-1.6; FR-GF-006 dan FR-AV-007 baru — spesifi
 | FR-AV-004 Photo Mode | T-6.3 | Manual P6 | 6 | Belum |
 | FR-AV-005 Tutorial | T-6.4 | Manual P6 | 6 | Belum |
 | FR-AV-006 Aksesibilitas | T-6.5 | Manual P6 | 6 | Belum |
-| FR-AV-007 Cartoon wind VFX (v0.2) | T-1.6 | TP-1.21, Manual P1 | 1 | Terimplementasi (9e07151); eksekusi menunggu CI |
+| FR-AV-007 Cartoon wind VFX (v0.2) | T-1.6 | TP-1.21, Manual P1 | 1 | Terverifikasi di CI (9e07151; run CI #8 lulus; uji manual menyusul) |
 | FR-SY-001 Save offline | T-6.6 | TP-6.1 | 6 | Belum |
 | FR-SY-002 Autosave/backup | T-6.6 | TP-6.1 | 6 | Belum |
 | FR-SY-003 Performa rendah | T-6.7 | Manual P6/P7 (FPS) | 6-7 | Belum (low_effects dasar tersedia di T-1.6) |
@@ -46,7 +46,7 @@ Versi: 0.1.5 (diperbarui setelah T-1.6; FR-GF-006 dan FR-AV-007 baru — spesifi
 | FR-DV-004 Developer Console | T-6.9 | Manual P6 | 6 | Belum |
 | FR-DV-005 Physics Lab | T-6.9 | Manual P6 | 6 | Belum |
 | FR-DV-006 Debug Overlay | T-6.9 | Manual P6 | 6 | Belum |
-| FR-QA-001 Tes otomatis | T-1.8, T-1.9 | Log CI | 1 | Belum (T-1.8 berikutnya) |
-| FR-QA-002 Regresi | T-7.1 | Log CI | 7 | Belum |
+| FR-QA-001 Tes otomatis | T-1.8, T-1.9 | Log CI | 1 | Terealisasikan: workflow ci.yml Godot 4.3-stable (8109893..1b954a0); run CI #8 lulus — import headless, parse check seluruh .gd, TP-1.1..TP-1.22 (111 lulus/0 gagal), gerbang keterlacakan; T-1.9 menyempurnaan cakupan menyusul |
+| FR-QA-002 Regresi | T-7.1 | Log CI | 7 | Belum (dasar: CI berjalan pada setiap push sejak T-1.8) |
 | FR-QA-003 Build APK | T-7.3 | Artefak workflow | 7 | Belum |
 | FR-QA-004 Verifikasi APK | T-7.4 | Catatan manual | 7 | Belum |
