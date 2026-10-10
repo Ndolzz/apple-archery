@@ -1,5 +1,5 @@
-## Pengujian BallisticsModel, AimController, CollisionService, Arrow, Target, ScoringService —
-## TP-1.1 s.d. TP-1.17. Runner mandiri tanpa dependensi addon (NFR-002): dijalankan dengan
+## Pengujian modul Phase 1 — TP-1.1 s.d. TP-1.22.
+## Runner mandiri tanpa dependensi addon (NFR-002): dijalankan dengan
 ##   godot --headless --path . --script tests/run_tests.gd
 ## Keluar dengan kode 0 bila seluruh pengujian lulus, 1 bila ada kegagalan.
 
@@ -14,6 +14,8 @@ func _init() -> void:
     _test_tp_1_2_drag_reduces_range()
     _test_tp_1_3_wind_shifts_impact()
     _test_tp_1_4_prediction_shape()
+    _test_tp_1_5_scoring_zones_and_perfect()
+    _test_tp_1_6_combo_sequence()
     _test_tp_1_7_begin_aim_in_area()
     _test_tp_1_8_power_direction_continuous()
     _test_tp_1_9_max_drag_clamped()
@@ -24,9 +26,12 @@ func _init() -> void:
     _test_tp_1_14_arrow_flight_consistency()
     _test_tp_1_15_arrow_sticks_on_hit()
     _test_tp_1_16_arrow_invalid_launch_and_reset()
-    _test_tp_1_5_scoring_zones_and_perfect()
-    _test_tp_1_6_combo_sequence()
     _test_tp_1_17_scoring_boundaries_and_no_double()
+    _test_tp_1_18_levels_from_data()
+    _test_tp_1_19_invalid_level_data_rejected()
+    _test_tp_1_20_camera_zoom_logic()
+    _test_tp_1_21_wind_vfx_mapping()
+    _test_tp_1_22_trajectory_preview_uses_model()
     _print_summary()
     quit(1 if _failures.size() > 0 else 0)
 
@@ -83,6 +88,46 @@ func _test_tp_1_4_prediction_shape() -> void:
     _check(points[0] == Vector2(3.0, 7.0), "TP-1.4 first predicted point equals start")
     var unchanged := m.position == Vector2(3.0, 7.0) and m.velocity == Vector2(10.0, 5.0)
     _check(unchanged, "TP-1.4 prediction does not mutate model state")
+
+
+## TP-1.5: zona skor — pusat tertinggi, tiap zona benar, Perfect Shot terdeteksi.
+func _test_tp_1_5_scoring_zones_and_perfect() -> void:
+    var t := Target.new("t1", Vector2(10.0, 5.0), 3.0)
+    _check(t.is_valid(), "TP-1.5 target with default zones is valid")
+    var center := ScoringService.classify(t, Vector2(10.0, 5.0))
+    _check(not center.is_empty() and int(center.points) == 50 and bool(center.is_perfect),
+        "TP-1.5 center scores highest zone (50) and is Perfect Shot")
+    var inner_edge := ScoringService.classify(t, Vector2(10.0, 6.0))
+    _check(not inner_edge.is_empty() and int(inner_edge.points) == 50,
+        "TP-1.5 inner zone boundary (d=1.0, frac 1/3 * 3) scores 50")
+    var middle := ScoringService.classify(t, Vector2(10.0, 6.5))
+    _check(not middle.is_empty() and int(middle.points) == 20 and not bool(middle.is_perfect),
+        "TP-1.5 middle zone scores 20, not perfect")
+    var outer := ScoringService.classify(t, Vector2(10.0, 7.5))
+    _check(not outer.is_empty() and int(outer.points) == 10,
+        "TP-1.5 outer zone scores 10")
+    var missed := ScoringService.classify(t, Vector2(10.0, 8.1))
+    _check(missed.is_empty(), "TP-1.5 point outside target scores nothing")
+    var invalid := Target.new("t2", Vector2(0.0, 0.0), -1.0)
+    _check(not invalid.is_valid(), "TP-1.5 invalid target rejected")
+    _check(ScoringService.classify(invalid, Vector2.ZERO).is_empty(), "TP-1.5 invalid target gives no score")
+    var wrong_id := ScoringService.score_hit({"point": Vector2(10.0, 5.0), "id": "other"}, t)
+    _check(wrong_id.is_empty(), "TP-1.5 score_hit with mismatched target id returns empty")
+
+
+## TP-1.6: combo bertambah pada hit berturut-turut, reset saat meleset.
+func _test_tp_1_6_combo_sequence() -> void:
+    var s := ScoringService.new()
+    _check(s.register_shot(true) == 1, "TP-1.6 first hit: combo 1")
+    _check(s.register_shot(true) == 2, "TP-1.6 second consecutive hit: combo 2")
+    _check(s.register_shot(true) == 3, "TP-1.6 third consecutive hit: combo 3")
+    _check(s.register_shot(false) == 0, "TP-1.6 miss resets combo to 0")
+    _check(s.register_shot(true) == 1, "TP-1.6 hit after miss: combo 1")
+    _check(s.best_combo == 3, "TP-1.6 best combo retained (3)")
+    s.reset()
+    _check(s.combo == 0 and s.best_combo == 0, "TP-1.6 reset clears combo and best combo")
+    _check(ScoringService.combo_points(50, 1) == 50, "TP-1.6 combo 1 gives no multiplier")
+    _check(ScoringService.combo_points(50, 3) == 75, "TP-1.6 combo 3 multiplies base by 1.5 (75)")
 
 
 ## TP-1.7: begin_aim di dalam area berhasil dan status menjadi aiming.
@@ -222,46 +267,6 @@ func _test_tp_1_16_arrow_invalid_launch_and_reset() -> void:
     _check(arrow.launch(Vector2(1.0, 1.0), Vector2(5.0, 5.0)), "TP-1.16 launch works after reset")
 
 
-## TP-1.5: zona skor — pusat tertinggi, tiap zona benar, Perfect Shot terdeteksi.
-func _test_tp_1_5_scoring_zones_and_perfect() -> void:
-    var t := Target.new("t1", Vector2(10.0, 5.0), 3.0)
-    _check(t.is_valid(), "TP-1.5 target with default zones is valid")
-    var center := ScoringService.classify(t, Vector2(10.0, 5.0))
-    _check(not center.is_empty() and int(center.points) == 50 and bool(center.is_perfect),
-        "TP-1.5 center scores highest zone (50) and is Perfect Shot")
-    var inner_edge := ScoringService.classify(t, Vector2(10.0, 6.0))
-    _check(not inner_edge.is_empty() and int(inner_edge.points) == 50,
-        "TP-1.5 inner zone boundary (d=1.0, frac 1/3 * 3) scores 50")
-    var middle := ScoringService.classify(t, Vector2(10.0, 6.5))
-    _check(not middle.is_empty() and int(middle.points) == 20 and not bool(middle.is_perfect),
-        "TP-1.5 middle zone scores 20, not perfect")
-    var outer := ScoringService.classify(t, Vector2(10.0, 7.5))
-    _check(not outer.is_empty() and int(outer.points) == 10,
-        "TP-1.5 outer zone scores 10")
-    var missed := ScoringService.classify(t, Vector2(10.0, 8.1))
-    _check(missed.is_empty(), "TP-1.5 point outside target scores nothing")
-    var invalid := Target.new("t2", Vector2(0.0, 0.0), -1.0)
-    _check(not invalid.is_valid(), "TP-1.5 invalid target rejected")
-    _check(ScoringService.classify(invalid, Vector2.ZERO).is_empty(), "TP-1.5 invalid target gives no score")
-    var wrong_id := ScoringService.score_hit({"point": Vector2(10.0, 5.0), "id": "other"}, t)
-    _check(wrong_id.is_empty(), "TP-1.5 score_hit with mismatched target id returns empty")
-
-
-## TP-1.6: combo bertambah pada hit berturut-turut, reset saat meleset.
-func _test_tp_1_6_combo_sequence() -> void:
-    var s := ScoringService.new()
-    _check(s.register_shot(true) == 1, "TP-1.6 first hit: combo 1")
-    _check(s.register_shot(true) == 2, "TP-1.6 second consecutive hit: combo 2")
-    _check(s.register_shot(true) == 3, "TP-1.6 third consecutive hit: combo 3")
-    _check(s.register_shot(false) == 0, "TP-1.6 miss resets combo to 0")
-    _check(s.register_shot(true) == 1, "TP-1.6 hit after miss: combo 1")
-    _check(s.best_combo == 3, "TP-1.6 best combo retained (3)")
-    s.reset()
-    _check(s.combo == 0 and s.best_combo == 0, "TP-1.6 reset clears combo and best combo")
-    _check(ScoringService.combo_points(50, 1) == 50, "TP-1.6 combo 1 gives no multiplier")
-    _check(ScoringService.combo_points(50, 3) == 75, "TP-1.6 combo 3 multiplies base by 1.5 (75)")
-
-
 ## TP-1.17: batas antarzona inklusif; skor dari titik masuk pertama; tanpa skor ganda.
 func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
     var t := Target.new("t17", Vector2(10.0, 5.0), 3.0)
@@ -274,8 +279,6 @@ func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
     var middle_edge := ScoringService.classify(t, Vector2(10.0, 5.0 + 2.0))
     _check(not middle_edge.is_empty() and int(middle_edge.points) == 20,
         "TP-1.17 exact middle boundary (d == 2.0) is inclusive to middle zone")
-
-    # Skor dihitung dari titik masuk pertama collision, bukan posisi akhir panah.
     var hit := CollisionService.segment_circle_first_hit(
         Vector2(0.0, 5.0), Vector2(20.0, 5.0), Vector2(10.0, 5.0), 3.0
     )
@@ -283,8 +286,6 @@ func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
     var scored := ScoringService.score_hit(hit, t)
     _check(not scored.is_empty() and int(scored.points) == 50 and bool(scored.is_perfect),
         "TP-1.17 score from first-entry point (x=7, zone 0), not final position (x=20)")
-
-    # Panah STUCK tidak menghasilkan skor baru.
     var arrow := Arrow.new()
     var s := ScoringService.new()
     arrow.targets = [t.to_collision_dict()]
@@ -295,8 +296,6 @@ func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
     var second_result := arrow.advance(1.0)
     _check(second_result.is_empty(), "TP-1.17 stuck arrow produces no second hit")
     _check(s.register_shot(not second_result.is_empty()) == 0, "TP-1.17 empty result resets combo (no double score)")
-
-    # Beberapa target dalam satu langkah: target pertama sepanjang jalur yang dinilai.
     var t_near := Target.new("near", Vector2(8.0, 5.0), 1.0)
     var t_far := Target.new("far", Vector2(16.0, 5.0), 1.0)
     var multi_hit := CollisionService.segment_targets_first_hit(
@@ -308,6 +307,121 @@ func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
     var multi_score := ScoringService.score_hit(multi_hit, t_near)
     _check(not multi_score.is_empty() and bool(multi_score.is_perfect),
         "TP-1.17 multi-target: score computed from selected target (near)")
+
+
+## TP-1.18: level termuat dari data JSON — 3 level, id unik, parameter benar.
+func _test_tp_1_18_levels_from_data() -> void:
+    var levels := LevelData.load_all_from_file("res://assets/levels/levels.json")
+    _check(levels.size() == 3, "TP-1.18 exactly 3 trial levels loaded from data")
+    var ids := []
+    for level in levels:
+        ids.append(level.id)
+        _check(level.is_valid(), "TP-1.18 level '%s' valid" % level.id)
+        _check(not level.targets.is_empty(), "TP-1.18 level '%s' has targets" % level.id)
+    _check(ids[0] == "trial_1" and ids[1] == "trial_2" and ids[2] == "trial_3",
+        "TP-1.18 level ids in order trial_1..trial_3")
+    var trial_2: LevelData = levels[1]
+    _check(absf(trial_2.wind.x - 2.5) < 0.000001, "TP-1.18 level 2 wind parsed (2.5 m/s)")
+    _check(absf(trial_2.drag - 0.15) < 0.000001, "TP-1.18 level 2 drag parsed (0.15)")
+    _check(trial_2.arrow_count == 5, "TP-1.18 level 2 arrow_count parsed (5)")
+    var trial_3: LevelData = levels[2]
+    _check(trial_3.targets.size() == 2, "TP-1.18 level 3 has two targets from data")
+    var collision_targets := trial_3.to_collision_targets()
+    _check(collision_targets.size() == 2 and String(collision_targets[1].id) == "t2",
+        "TP-1.18 to_collision_targets preserves order and ids")
+
+
+## TP-1.19: data level tidak valid ditolak (fail-fast).
+func _test_tp_1_19_invalid_level_data_rejected() -> void:
+    var no_id := LevelData.from_dict({
+        "name": "x", "arrow_count": 3,
+        "targets": [{"id": "t", "position": {"x": 1.0, "y": 1.0}, "radius": 1.0}],
+    })
+    _check(no_id == null, "TP-1.19 level without id rejected")
+    var no_targets := LevelData.from_dict({"id": "a", "arrow_count": 3, "targets": []})
+    _check(no_targets == null, "TP-1.19 level without targets rejected")
+    var bad_arrows := LevelData.from_dict({
+        "id": "a", "arrow_count": 0,
+        "targets": [{"id": "t", "position": {"x": 1.0, "y": 1.0}, "radius": 1.0}],
+    })
+    _check(bad_arrows == null, "TP-1.19 level with arrow_count < 1 rejected")
+    var bad_target := LevelData.from_dict({
+        "id": "a", "arrow_count": 3,
+        "targets": [{"id": "t", "position": {"x": 1.0, "y": 1.0}, "radius": -2.0}],
+    })
+    _check(bad_target == null, "TP-1.19 level with invalid target radius rejected")
+    var missing_file := LevelData.load_all_from_file("res://assets/levels/does_not_exist.json")
+    _check(missing_file.is_empty(), "TP-1.19 missing file returns empty, not crash")
+
+
+## TP-1.20: logika zoom kamera murni — zoom saat bidik, kembali mulus, tanpa lompatan.
+func _test_tp_1_20_camera_zoom_logic() -> void:
+    _check(absf(ArenaCamera.compute_zoom_target(true) - 1.35) < 0.000001,
+        "TP-1.20 aiming targets ZOOM_AIM (1.35)")
+    _check(absf(ArenaCamera.compute_zoom_target(false) - 1.0) < 0.000001,
+        "TP-1.20 not aiming targets ZOOM_NORMAL (1.0)")
+    var z := 1.0
+    for i in range(120):
+        z = ArenaCamera.compute_zoom_step(z, 1.35, 1.0 / 60.0)
+    _check(absf(z - 1.35) < 0.01, "TP-1.20 zoom converges smoothly to aim zoom")
+    var one_step := ArenaCamera.compute_zoom_step(1.0, 1.35, 1.0 / 60.0)
+    _check(one_step > 1.0 and one_step < 1.1,
+        "TP-1.20 single frame step is small (no sudden movement)")
+    var back := z
+    for i in range(240):
+        back = ArenaCamera.compute_zoom_step(back, 1.0, 1.0 / 60.0)
+    _check(absf(back - 1.0) < 0.001,
+        "TP-1.20 zoom returns to normal after release/cancel")
+    var clamped := ArenaCamera.compute_zoom_step(1.0, 99.0, 1.0)
+    _check(clamped <= ArenaCamera.ZOOM_MAX, "TP-1.20 zoom clamped to ZOOM_MAX")
+
+
+## TP-1.21: pemetaan VFX angin mengikuti parameter angin fisika.
+func _test_tp_1_21_wind_vfx_mapping() -> void:
+    var zero := WindVFX.compute_visual_params(Vector2.ZERO, false)
+    _check(float(zero.intensity) == 0.0 and int(zero.streaks) == 0,
+        "TP-1.21 zero wind: no visual streaks")
+    var medium := WindVFX.compute_visual_params(Vector2(4.0, 0.0), false)
+    _check(absf(float(medium.intensity) - 0.5) < 0.000001 and absf(float(medium.direction)) < 0.000001,
+        "TP-1.21 4 m/s east wind: intensity 0.5, direction 0 rad")
+    var max_wind := WindVFX.compute_visual_params(Vector2(0.0, -8.0), false)
+    _check(absf(float(max_wind.intensity) - 1.0) < 0.000001,
+        "TP-1.21 8 m/s wind: intensity clamped to 1.0")
+    var over := WindVFX.compute_visual_params(Vector2(-20.0, 0.0), false)
+    _check(absf(float(over.intensity) - 1.0) < 0.000001 and absf(float(over.direction) - PI) < 0.000001,
+        "TP-1.21 wind beyond max: intensity 1.0, direction follows sign (pi rad)")
+    var low := WindVFX.compute_visual_params(Vector2(4.0, 0.0), true)
+    var normal := WindVFX.compute_visual_params(Vector2(4.0, 0.0), false)
+    _check(int(low.streaks) < int(normal.streaks),
+        "TP-1.21 low_effects mode reduces streak count")
+
+
+## TP-1.22: preview lintasan memakai BallisticsModel.predict_trajectory (identik).
+func _test_tp_1_22_trajectory_preview_uses_model() -> void:
+    var preview := TrajectoryPreview.new()
+    var origin := Vector2(2.0, 2.0)
+    var velocity := Vector2(20.0, 15.0)
+    var wind := Vector2(2.5, 0.0)
+    preview.update_prediction(origin, velocity, BallisticsModel.DEFAULT_GRAVITY, wind, 0.15)
+    var reference := BallisticsModel.new(
+        origin, velocity, BallisticsModel.DEFAULT_GRAVITY, wind, 0.15
+    ).predict_trajectory(preview.effective_point_count(), 1.0 / 30.0)
+    var points := preview.get_points()
+    _check(points.size() == reference.size() and points.size() == TrajectoryPreview.DEFAULT_POINT_COUNT,
+        "TP-1.22 preview point count matches model prediction (default 40)")
+    var identical := true
+    for i in points.size():
+        if points[i] != reference[i]:
+            identical = false
+            break
+    _check(identical, "TP-1.22 preview points identical to BallisticsModel.predict_trajectory (no duplicated physics)")
+    preview.low_effects = true
+    preview.update_prediction(origin, velocity, BallisticsModel.DEFAULT_GRAVITY, wind, 0.15)
+    _check(preview.get_points().size() == TrajectoryPreview.LOW_EFFECT_POINT_COUNT,
+        "TP-1.22 low_effects reduces preview points (15)")
+    preview.enabled = false
+    preview.update_prediction(origin, velocity, BallisticsModel.DEFAULT_GRAVITY, wind, 0.15)
+    _check(preview.get_points().is_empty(), "TP-1.22 disabled preview clears points (FR-GF-004 toggle)")
 
 
 ## Simulasi hingga panah kembali ke ketinggian awal.
@@ -325,6 +439,6 @@ func _range_until_ground(v0: Vector2, g: Vector2, wind: Vector2, drag: float, dt
 
 func _print_summary() -> void:
     print("")
-    print("Ballistics + Aim + Collision + Arrow + Target + Scoring tests: %d passed, %d failed" % [_passed, _failures.size()])
+    print("Phase 1 module tests: %d passed, %d failed" % [_passed, _failures.size()])
     for label in _failures:
         print("  FAILED: %s" % label)

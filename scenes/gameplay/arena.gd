@@ -7,7 +7,7 @@
 ##
 ## Alur: sentuh untuk menarik; lepas untuk menembak; gerak panah via advance()
 ## per frame dengan delta nyata; hasil hit dinilai ScoringService dari titik
-## masuk pertama. Batas panah per level (arrow_count); R memuat ulang level.
+## masuk pertama. Batas panah per level (arrow_count); E memuat ulang level.
 ##
 ## Requirement: FR-GF-001..005, FR-LV-001 (dasar), FR-GF-006, FR-AV-007.
 
@@ -50,12 +50,12 @@ func _ready() -> void:
     _camera.make_current()
     _wind_vfx = WindVFX.new()
     _wind_vfx.z_index = -10
+    _wind_vfx.low_effects = low_effects
     add_child(_wind_vfx)
     _preview = TrajectoryPreview.new()
     _preview.low_effects = low_effects
     _preview.z_index = 5
     add_child(_preview)
-    _wind_vfx.low_effects = low_effects
     _build_hud()
     _levels = LevelData.load_all_from_file(LEVELS_PATH)
     if _levels.is_empty():
@@ -101,7 +101,6 @@ func _draw_target_visual(target: Target) -> Node2D:
     node.set_meta("is_target", true)
     node.position = target.position
     node.z_index = TARGETS_Z_INDEX
-    node.set_script(null)
     var colors: Array[Color] = [Color(1.0, 0.92, 0.4), Color(0.96, 0.4, 0.35), Color(1.0, 1.0, 1.0)]
     var drawer := TargetVisual.new()
     drawer.target = target
@@ -119,7 +118,7 @@ func _unhandled_input(event: InputEvent) -> void:
         _handle_mouse(event as InputEventMouseButton)
     elif event is InputEventMouseMotion:
         _handle_mouse_motion(event as InputEventMouseMotion)
-    elif event is InputEventKey and event.is_action_pressed("ui_text_redo"):
+    elif event is InputEventKey and event.pressed and (event as InputEventKey).keycode == KEY_E:
         load_level(level_index)
 
 
@@ -192,13 +191,6 @@ func _fire() -> void:
     _update_hud()
 
 
-func _cancel_aim() -> void:
-    _aim.cancel_aim()
-    _camera.set_aiming(false)
-    _preview.clear_preview()
-    _touch_index = -1
-
-
 func _process(delta: float) -> void:
     if _arrow.state == Arrow.State.FLYING:
         var hit := _arrow.advance(delta)
@@ -214,8 +206,6 @@ func _on_hit(hit: Dictionary) -> void:
     if scored:
         _total_score += ScoringService.combo_points(int(result.points), combo)
     _update_hud()
-    if _arrows_left <= 0:
-        _hud_info.text += "  [E] ulang"
 
 
 func _update_hud() -> void:
