@@ -1,6 +1,6 @@
 # Apple Archery — Test Plan
 
-Versi: 0.1.3 (TP-1.17 ditambahkan pada T-1.5; nilai zona mengikuti ADR-009)
+Versi: 0.1.4 (TP-1.18 s.d. TP-1.22 ditambahkan pada T-1.6; FR-GF-006 dan FR-AV-007 tercatat pada spesifikasi v0.2)
 
 ## 1. Strategi
 
@@ -11,7 +11,7 @@ Versi: 0.1.3 (TP-1.17 ditambahkan pada T-1.5; nilai zona mengikuti ADR-009)
 
 ## 2. Pengujian Otomatis (direncanakan per Phase)
 
-### Phase 1 (fisika, skoring, dan bidik)
+### Phase 1 (fisika, skoring, bidik, level, presentasi murni)
 - TP-1.1 BallisticsModel: lintasan tanpa angin cocok dengan solusi analitik parabola (toleransi).
 - TP-1.2 BallisticsModel: drag mengurangi jangkauan dibanding tanpa drag.
 - TP-1.3 BallisticsModel: angin arah positif/negatif menggeser titik impact sesuai tanda.
@@ -24,17 +24,22 @@ Versi: 0.1.3 (TP-1.17 ditambahkan pada T-1.5; nilai zona mengikuti ADR-009)
 - TP-1.10 AimController: pembatalan mengembalikan status idle; release setelah batal tidak menghasilkan tembakan.
 - TP-1.11 AimController: sentuhan di luar area permainan ditolak; release tanpa menarik mengembalikan hasil kosong.
 - TP-1.12 CollisionService: swept collision menangkap panah cepat yang dilewatkan cek diskret pada titik ujung.
-- TP-1.13 CollisionService: titik impact adalah titik masuk pertama segmen ke lingkaran (bukan titik terdalam); segmen di belakang atau jauh dari target tidak mengenai; target pertama sepanjang jalur dipilih.
+- TP-1.13 CollisionService: titik impact adalah titik masuk pertama segmen ke lingkaran; segmen di belakang/jauh tidak mengenai; target pertama sepanjang jalur dipilih.
 - TP-1.14 Arrow: posisi node konsisten dengan BallisticsModel pada timestep tetap (simulasi independen identik).
-- TP-1.15 Arrow: panah menancap pada titik impact, sinyal hit_target terbit, panah tidak bergerak lagi setelah menancap.
+- TP-1.15 Arrow: panah menancap pada titik impact, sinyal hit_target terbit, panah tidak bergerak lagi.
 - TP-1.16 Arrow: peluncuran kecepatan nol ditolak; peluncuran ulang saat terbang ditolak; reset mengembalikan status siap; advance saat idle diabaikan.
-- TP-1.17 ScoringService/Target: batas antarzona inklusif terhadap zona dalam; tepi luar target (d == radius) tetap dihitung; skor dihitung dari titik masuk pertama collision (bukan posisi akhir panah); panah STUCK tidak menghasilkan skor/kedua; beberapa target satu langkah: target pertama sepanjang jalur yang dinilai; id target tidak cocok tidak menghasilkan skor.
+- TP-1.17 ScoringService/Target: batas antarzona inklusif; tepi luar target dihitung; skor dari titik masuk pertama; panah STUCK tanpa skor kedua; multi-target: target pertama jalur yang dinilai; id target tidak cocok tidak menghasilkan skor.
+- TP-1.18 LevelData: 3 level termuat dari JSON; id unik dan berurutan; parameter (wind, drag, arrow_count, target) terurai benar; urutan dan id target dipertahankan.
+- TP-1.19 LevelData: data tidak valid ditolak (id kosong, tanpa target, arrow_count < 1, radius target tidak valid, berkas hilang) — fail-fast.
+- TP-1.20 ArenaCamera (FR-GF-006): zoom tujuan saat bidik/kembali normal; konvergensi mulus; langkah satu frame kecil (tanpa gerakan mendadak); nilai dijepit batas.
+- TP-1.21 WindVFX (FR-AV-007): angin nol tanpa goresan; intensitas dan arah mengikuti vektor angin fisika; intensitas terkunci 1.0 di atas batas; arah mengikuti tanda; low_effects mengurangi jumlah goresan.
+- TP-1.22 TrajectoryPreview: titik identik dengan BallisticsModel.predict_trajectory untuk parameter sama (tidak ada fisika duplikat); low_effects mengurangi jumlah titik; toggle enabled menghapus titik.
 
-Catatan TP-1.17 (ditambahkan pada T-1.5): AC FR-GF-005 mengenai pencegahan skor ganda dan batas zona memerlukan metode pengujian otomatis. Penambahan metode pengujian, bukan perubahan requirement. Nilai zona mengikuti ADR-009 (menunggu persetujuan pengguna).
+Catatan TP-1.18 s.d. TP-1.22 (ditambahkan pada T-1.6): AC FR-GF-006 dan FR-AV-007 (baru, spesifikasi v0.2) serta AC dasar FR-LV-001 (level dari data) memerlukan metode pengujian otomatis. Penambahan metode pengujian dan requirement presentasi murni; logika simulasi tidak berubah.
 
-Catatan TP-1.12 s.d. TP-1.16 (ditambahkan pada T-1.4): acceptance criteria FR-GF-003 (collision, panah menempel) memerlukan metode pengujian otomatis. Ini penambahan metode pengujian, bukan perubahan requirement.
+Catatan TP-1.12 s.d. TP-1.16 (ditambahkan pada T-1.4): AC FR-GF-003 memerlukan metode pengujian otomatis. Penambahan metode pengujian, bukan perubahan requirement.
 
-Catatan TP-1.7 s.d. TP-1.11 (ditambahkan pada T-1.3): acceptance criteria FR-GF-001 (kontinuitas tarikan, batas maksimum, pembatalan, sentuhan di luar area) memerlukan metode pengujian otomatis karena sebelumnya hanya tercantum pengujian manual. Ini penambahan metode pengujian, bukan perubahan requirement.
+Catatan TP-1.7 s.d. TP-1.11 (ditambahkan pada T-1.3): AC FR-GF-001 memerlukan metode pengujian otomatis. Penambahan metode pengujian, bukan perubahan requirement.
 
 ### Phase 2-6
 - TP-2.1 Pemuatan data level: semua level valid (target ada, parameter dalam rentang).
@@ -49,6 +54,10 @@ Catatan TP-1.7 s.d. TP-1.11 (ditambahkan pada T-1.3): acceptance criteria FR-GF-
 ## 3. Pengujian Manual (checklist per fase)
 
 - Tarikan busur responsif pada layar sentuh.
+- Soft camera zoom terasa halus, target tetap terlihat, kembali normal setelah tembakan/batal.
+- Wind VFX mengikuti arah angin level dan tidak menutupi target/zona/panah.
+- Trajectory preview akurat terhadap lintasan aktual dan dapat dinonaktifkan.
+- Mode efek rendah terlihat lebih hemat tanpa merusak keterbacaan.
 - FPS stabil pada perangkat target (dicatat angka).
 - Audio tidak terpotong; volume pengaturan berfungsi.
 - Multiplayer lokal: input dua pemain tidak bertukar.

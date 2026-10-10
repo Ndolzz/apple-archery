@@ -8,12 +8,12 @@ Konsekuensi: Tidak dapat menjalankan Godot secara lokal di HP; seluruh verifikas
 
 ## ADR-002: Logika fisika terpisah dari scene
 Status: Diterima (baseline)
-Keputusan: BallisticsModel ditulis sebagai kelas murni GDScript (RefCounted) agar dapat diuji headless tanpa scene. Node Arrow hanya menjalankan integrasi yang diberikan model.
+Keputusan: BallisticsModel ditulis sebagai kelas murni GDScript (RefCounted) agar dapat diuji headless tanpa scene. Node Arrow hanya menjalankan integrasi yang diberikan model. TrajectoryPreview juga memakai predict_trajectory, bukan rumus duplikat.
 Alasan: Pengujian otomatis di CI tanpa GPU/loop render.
 
 ## ADR-003: Data-driven untuk level
-Status: Diterima (baseline)
-Keputusan: Level didefinisikan sebagai data (resource Godot/JSON), bukan scene per level. Scene arena tunggal dengan parameter.
+Status: Diterima (baseline; direalisasikan T-1.6)
+Keputusan: Level didefinisikan sebagai data (JSON: assets/levels/levels.json), bukan scene per level. Scene arena tunggal dengan parameter. Loader fail-fast: satu level tidak valid menolak seluruh berkas.
 Alasan: Mendukung puluhan level, Daily Challenge, dan Challenge Code tanpa duplikasi.
 
 ## ADR-004: Ghost Replay dan Challenge Code berbasis data
@@ -40,13 +40,22 @@ Status: Tidak ada.
 Catatan: Repositori kosong saat baseline dibuat; tidak ada keputusan sebelumnya yang perlu dipertahankan atau dibatalkan.
 
 ## ADR-009: Nilai zona skor dan aturan combo (T-1.5)
-Status: Diterima sementara — menunggu persetujuan pengguna
-Konteks: Spec FR-GF-005 hanya mengamanatkan "zona pusat memberi skor lebih tinggi" dan "combo bertambah pada tembakan berturut-turut yang berhasil"; nilai konkret tidak diatur di dokumen SDD mana pun.
-Keputusan (data, dapat diubah tanpa mengubah requirement):
-1. Target = lingkaran konsentris; zona dinyatakan sebagai fraksi radius (0..1]; 3 zona bawaan dengan fraksi 1/3, 2/3, 1.0 dan poin 50, 20, 10.
+Status: Disetujui sementara oleh pengguna (instruksi T-1.6): nilai 50/20/10, Perfect Shot pada zona pusat, batas zona inklusif ke zona dalam, rumus combo diusulkan tetap dapat dikonfigurasi per level.
+Konteks: Spec FR-GF-005 hanya mengamanatkan "zona pusat memberi skor lebih tinggi" dan "combo bertambah pada tembakan berturut-turut yang berhasil"; nilai konkret tidak diatur di dokumen SDD lain.
+Keputusan (data, dapat diubah per level tanpa mengubah requirement):
+1. Target = lingkaran konsentris; zona dinyatakan sebagai fraksi radius (0..1]; 3 zona bawaan dengan fraksi 1/3, 2/3, 1.0 dan poin 50, 20, 10 (zone_points dapat dioverride per target di data level).
 2. Perfect Shot = tembakan pada zona 0 (pusat).
-3. Batas antarzona inklusif terhadap zona dalam: jarak <= radius zona menghasilkan zona tersebut (konsisten dengan collision yang menerima titik tepat pada batas target).
+3. Batas antarzona inklusif terhadap zona dalam: jarak <= radius zona menghasilkan zona tersebut.
 4. Combo: penghitung tembakan berturut-turut yang berhasil; reset saat meleset; multiplier combo = 1 + 0.25 * (combo - 1) untuk combo >= 2; best_combo dicatat.
-Kasus diatur/didokumentasikan: panah STUCK tidak menghasilkan skor baru (Arrow.advance kosong saat tidak FLYING); target terkena lebih dari sekali tidak mungkin pada T-1.5 karena panah menancap pada hit pertama (target bergerak: Phase 2); beberapa target satu langkah: target pertama sepanjang jalur (t terkecil) yang dinilai.
-Alasan: Memenuhi AC FR-GF-005 tanpa mengarang aturan yang bertentangan; seluruh nilai adalah data per level sehingga dapat disetel ulang tanpa perubahan kode.
-Dampak: Tidak mengubah requirement; apabila pengguna menolak nilai ini, hanya konstanta Target/ScoringService yang berubah.
+Kasus diatur: panah STUCK tidak menghasilkan skor baru; target terkena lebih dari sekali tidak mungkin pada T-1.5 (panah menancap; target bergerak: Phase 2); beberapa target satu langkah: target pertama sepanjang jalur (t terkecil) yang dinilai.
+
+## ADR-010: Kamera dan VFX hanya presentasi (T-1.6)
+Status: Diterima (persetujuan pengguna dalam instruksi T-1.6)
+Konteks: Pengguna meminta soft camera zoom saat membidik dan cartoon wind VFX sebagai bagian T-1.6.
+Keputusan:
+1. ArenaCamera dan WindVFX adalah komponen presentasi; keduanya tidak boleh mengubah kecepatan, arah, skor, collision, atau hasil simulasi panah (dijaga oleh pemisahan antarmuka: keduanya hanya menerima status bidik / vektor angin).
+2. Logika zoom dan pemetaan visual angin diimplementasikan sebagai fungsi murni yang dapat diuji tanpa rendering (compute_zoom_target/compute_zoom_step; compute_visual_params).
+3. Wind VFX membaca parameter angin dari model fisika yang sama (wind Vector2 m/s level aktif); tidak ada sistem angin visual terpisah.
+4. low_effects tersedia pada VFX dan preview (pengurangan goresan/titik) untuk perangkat terbatas; z_index VFX di bawah gameplay agar tidak menutupi target, zona, atau panah.
+5. Kebutuhan ini dicatat sebagai requirement baru FR-GF-006 dan FR-AV-007 (perubahan spesifikasi v0.2).
+Konsekuensi: Scope resmi bertambah dua requirement presentasi; tidak ada dampak pada logika simulasi; pengujian otomatis menutupi fungsi murni, verifikasi visual manual terdokumentasi.

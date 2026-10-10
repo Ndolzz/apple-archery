@@ -1,15 +1,16 @@
 # Apple Archery — Traceability Matrix
 
-Versi: 0.1.4 (diperbarui setelah T-1.5 berdasarkan bukti aktual; kolom Status memisahkan "terimplementasi" dan "terverifikasi di CI" sesuai aturan anti-klaim tanpa bukti).
+Versi: 0.1.5 (diperbarui setelah T-1.6; FR-GF-006 dan FR-AV-007 baru — spesifikasi v0.2; kolom Status memisahkan "terimplementasi" dan "terverifikasi di CI").
 
 | Requirement | Tugas (03-BACKLOG) | Pengujian (04-TEST-PLAN) | Fase | Status |
 |---|---|---|---|---|
-| FR-GF-001 Tarikan busur | T-1.3 | TP-1.7, TP-1.8, TP-1.9, TP-1.10, TP-1.11, Manual P1 (tarikan responsif) | 1 | Terimplementasi (commit 8ae4286); tes tertulis, eksekusi menunggu CI (T-1.8/T-1.9) |
-| FR-GF-002 Fisika realistis | T-1.2 | TP-1.1, TP-1.2, TP-1.3 | 1 | Terimplementasi (commit 10f5042); tes tertulis, eksekusi menunggu CI (T-1.8/T-1.9) |
-| FR-GF-003 Collision | T-1.4 | TP-1.12, TP-1.13, TP-1.14, TP-1.15, TP-1.16, Manual P1 (panah menempel benar) | 1 | Terimplementasi (commit 31596a7); tes tertulis, eksekusi menunggu CI (T-1.8/T-1.9) |
-| FR-GF-004 Prediksi lintasan | T-1.2 | TP-1.4 | 1 | Terimplementasi (commit 10f5042); tes tertulis, eksekusi menunggu CI (T-1.8/T-1.9) |
-| FR-GF-005 Skoring/Perfect/combo | T-1.5 | TP-1.5, TP-1.6, TP-1.17, Manual P1 (visual zona) | 1 | Terimplementasi (commit d5d68ca, 23cc967); nilai zona = ADR-009 menunggu persetujuan; tes tertulis, eksekusi menunggu CI (T-1.8/T-1.9) |
-| FR-LV-001 Level bertahap | T-1.6, T-2.6 | TP-2.1 | 1-2 | Belum |
+| FR-GF-001 Tarikan busur | T-1.3 | TP-1.7..TP-1.11, Manual P1 | 1 | Terimplementasi (8ae4286); eksekusi menunggu CI |
+| FR-GF-002 Fisika realistis | T-1.2 | TP-1.1, TP-1.2, TP-1.3 | 1 | Terimplementasi (10f5042); eksekusi menunggu CI |
+| FR-GF-003 Collision | T-1.4 | TP-1.12..TP-1.16, Manual P1 | 1 | Terimplementasi (31596a7); eksekusi menunggu CI |
+| FR-GF-004 Prediksi lintasan | T-1.2, T-1.6 | TP-1.4, TP-1.22, Manual P1 | 1 | Terimplementasi (10f5042, 52094d); eksekusi menunggu CI |
+| FR-GF-005 Skoring/Perfect/combo | T-1.5 | TP-1.5, TP-1.6, TP-1.17, Manual P1 | 1 | Terimplementasi (d5d68ca, 23cc967); ADR-009 disetujui sementara; eksekusi menunggu CI |
+| FR-GF-006 Soft camera zoom (v0.2) | T-1.6 | TP-1.20, Manual P1 | 1 | Terimplementasi (9e07151); eksekusi menunggu CI |
+| FR-LV-001 Level bertahap (dasar) | T-1.6, T-2.6 | TP-1.18, TP-1.19, TP-2.1 | 1-2 | Dasar terimplementasi: 3 level dari data (9e07151); eksekusi menunggu CI |
 | FR-LV-002 Peta dunia | T-2.1 | Manual P2 | 2 | Belum |
 | FR-LV-003 Target bergerak | T-2.2 | Manual P2 | 2 | Belum |
 | FR-LV-004 Rintangan/puzzle | T-2.3 | Manual P2 | 2 | Belum |
@@ -20,7 +21,7 @@ Versi: 0.1.4 (diperbarui setelah T-1.5 berdasarkan bukti aktual; kolom Status me
 | FR-CH-003 Koin | T-3.3 | TP-3.1 | 3 | Belum |
 | FR-CH-004 Toko | T-3.4 | TP-3.1 | 3 | Belum |
 | FR-CH-005 Upgrade/kosmetik | T-3.4, T-3.5 | TP-3.1 | 3 | Belum |
-| FR-MD-001 Campaign | T-1.6, T-2.x | TP-2.1 | 1-2 | Belum |
+| FR-MD-001 Campaign | T-1.6, T-2.x | TP-2.1 | 1-2 | Belum (dasar arena ada; alur kampanye menyusul) |
 | FR-MD-002 Time Attack | T-4.1 | TP-4.2, Manual P4 | 4 | Belum |
 | FR-MD-003 Daily Challenge | T-4.2 | TP-4.1 | 4 | Belum |
 | FR-MD-004 Rank/medali | T-4.3 | TP-4.2 | 4 | Belum |
@@ -35,9 +36,10 @@ Versi: 0.1.4 (diperbarui setelah T-1.5 berdasarkan bukti aktual; kolom Status me
 | FR-AV-004 Photo Mode | T-6.3 | Manual P6 | 6 | Belum |
 | FR-AV-005 Tutorial | T-6.4 | Manual P6 | 6 | Belum |
 | FR-AV-006 Aksesibilitas | T-6.5 | Manual P6 | 6 | Belum |
+| FR-AV-007 Cartoon wind VFX (v0.2) | T-1.6 | TP-1.21, Manual P1 | 1 | Terimplementasi (9e07151); eksekusi menunggu CI |
 | FR-SY-001 Save offline | T-6.6 | TP-6.1 | 6 | Belum |
 | FR-SY-002 Autosave/backup | T-6.6 | TP-6.1 | 6 | Belum |
-| FR-SY-003 Performa rendah | T-6.7 | Manual P6/P7 (FPS) | 6-7 | Belum |
+| FR-SY-003 Performa rendah | T-6.7 | Manual P6/P7 (FPS) | 6-7 | Belum (low_effects dasar tersedia di T-1.6) |
 | FR-DV-001 Identitas Naze | T-6.8 | Manual P6 | 6 | Belum |
 | FR-DV-002 About/Credits | T-6.8 | Manual P6 | 6 | Belum |
 | FR-DV-003 Changelog | T-6.8 | Manual P6 | 6 | Belum |

@@ -1,7 +1,7 @@
 # Apple Archery — Spesifikasi (SDD)
 
-Versi: 0.1 (Baseline Phase 0)
-Status: Draft, menunggu persetujuan sebelum implementasi Phase 1.
+Versi: 0.2 (T-1.6: FR-GF-006 dan FR-AV-007 ditambahkan atas permintaan pengguna; ADR-009 disetujui sementara dengan konfigurasi per level)
+Status: Draft; Phase 1 berjalan bertahap.
 
 ## 1. Ringkasan Produk
 
@@ -24,13 +24,15 @@ Setiap requirement memiliki ID, acceptance criteria (AC), tugas implementasi (li
 - FR-GF-003 Collision detection antara panah, target, rintangan, dan area permainan.
   - AC: Panah menempel pada target sesuai titik impact; tidak menembus rintangan.
 - FR-GF-004 Prediksi lintasan (trajectory hint) yang dapat diaktifkan/dinonaktifkan.
-  - AC: Garis prediksi memperhitungkan gravitasi dan angin saat aktif.
+  - AC: Garis prediksi memperhitungkan gravitasi dan angin saat aktif; dihitung melalui BallisticsModel, bukan rumus duplikat.
 - FR-GF-005 Skoring berbasis zona target, Perfect Shot, dan combo.
-  - AC: Zona pusat memberi skor lebih tinggi; Perfect Shot terdeteksi; combo bertambah pada tembakan berturut-turut yang berhasil.
+  - AC: Zona pusat memberi skor lebih tinggi; Perfect Shot terdeteksi; combo bertambah pada tembakan berturut-turut yang berhasil. Nilai zona dan rumus combo mengikuti ADR-009 (dapat dikonfigurasi per level).
+- FR-GF-006 Soft Camera Zoom saat membidik (ditambahkan T-1.6 atas permintaan pengguna; presentasi saja).
+  - AC: Saat membidik, kamera zoom-in halus dengan fokus visual pada anak panah; target tetap terlihat; tanpa gerakan mendadak; kembali ke tampilan normal setelah tembakan atau pembatalan bidikan; kamera tidak mengubah kecepatan, arah, skor, collision, atau hasil simulasi.
 
 ### LV — Level dan Kampanye
 
-- FR-LV-001 Level bertahap dengan kesulitan meningkat.
+- FR-LV-001 Level bertahap dengan kesulitan meningkat. (Dasar T-1.6: level dari data JSON, satu scene arena.)
 - FR-LV-002 Minimal 4 peta dunia berbeda (tema visual berbeda).
 - FR-LV-003 Target bergerak (kecepatan dan pola gerak bervariasi).
 - FR-LV-004 Rintangan dan elemen puzzle.
@@ -65,6 +67,8 @@ Setiap requirement memiliki ID, acceptance criteria (AC), tugas implementasi (li
 - FR-AV-004 Photo Mode untuk menangkap momen permainan.
 - FR-AV-005 Tutorial interaktif untuk mekanik dasar.
 - FR-AV-006 Pengaturan aksesibilitas (ukuran UI, kontras, reduksi gerak, kontrol alternatif).
+- FR-AV-007 Cartoon Wind VFX (ditambahkan T-1.6 atas permintaan pengguna; presentasi saja).
+  - AC: Efek angin 2D bergaya kartun (garis lengkung/partikel/daun) mengikuti arah dan intensitas dari parameter angin model fisika yang sama, bukan sistem angin visual terpisah; efek tidak menutupi target, zona skor, atau panah; tersedia pengaturan efek rendah untuk perangkat terbatas; VFX tidak mengubah hasil simulasi.
 
 ### SY — Sistem dan Penyimpanan
 
@@ -83,7 +87,7 @@ Setiap requirement memiliki ID, acceptance criteria (AC), tugas implementasi (li
 
 ### QA — Pengujian dan Build
 
-- FR-QA-001 Pengujian otomatis melalui GitHub Actions (GUT/headless Godot).
+- FR-QA-001 Pengujian otomatis melalui GitHub Actions (headless Godot).
 - FR-QA-002 Pengujian regresi per rilis fitur.
 - FR-QA-003 Build APK melalui GitHub Actions.
 - FR-QA-004 Verifikasi APK yang dihasilkan (install dan smoke test manual terdokumentasi).
@@ -99,3 +103,7 @@ Setiap requirement memiliki ID, acceptance criteria (AC), tugas implementasi (li
 
 - Multiplayer daring (online). Local Multiplayer tetap dalam lingkup.
 - Iklan dan pembelian dalam aplikasi (belum diputuskan, lihat ADR-007).
+
+## 6. Riwayat Perubahan Spesifikasi
+
+- v0.2 (T-1.6): FR-GF-006 (Soft Camera Zoom) dan FR-AV-007 (Cartoon Wind VFX) ditambahkan atas permintaan dan persetujuan eksplisit pengguna dalam instruksi T-1.6; keduanya presentasi saja (tidak mengubah simulasi). FR-GF-004 diperjelas: prediksi harus melalui BallisticsModel. FR-GF-005 diperjelas: mengikuti ADR-009 (disetujui sementara pengguna; konfigurasi per level).

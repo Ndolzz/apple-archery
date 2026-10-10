@@ -1,6 +1,6 @@
 # Apple Archery — Backlog dan Task Breakdown
 
-Versi: 0.1. Seluruh ID requirement merujuk pada 00-SPEC.md.
+Versi: 0.2. Seluruh ID requirement merujuk pada 00-SPEC.md.
 
 ## Phase 0 — Baseline SDD (SELESAI)
 
@@ -14,28 +14,30 @@ Versi: 0.1. Seluruh ID requirement merujuk pada 00-SPEC.md.
 - [x] T-0.8 Membuat register risiko (06-RISKS).
 - [x] T-0.9 Laporan Phase 0 (PHASE0_REPORT).
 
-## Phase 1 — Vertical Slice (FR-GF-001..005, FR-LV-001 parsial)
+## Phase 1 — Vertical Slice (FR-GF-001..006, FR-LV-001 dasar, FR-AV-007)
 
 - [x] T-1.1 Inisialisasi proyek Godot 4.x (commit 7c5fdb8).
 - [x] T-1.2 BallisticsModel murni: gravitasi, drag, angin, prediksi lintasan (commit 10f5042).
 - [x] T-1.3 AimController: input tarikan untuk sentuh (commit 8ae4286).
 - [x] T-1.4 Arrow node + collision (commit 31596a7).
-- [x] T-1.5 Target statis dengan zona skoring (commit d5d68ca, 23cc967).
-- [ ] T-1.6 Arena scene tunggal + 3 level percobaan dari data (FR-LV-001 dasar).
-- [ ] T-1.7 HUD minimal: skor, angin, tombol prediksi.
+- [x] T-1.5 Target statis dengan zona skoring (commit d5d68ca, 23cc967; ADR-009 disetujui sementara).
+- [x] T-1.6 Arena scene tunggal + 3 level dari data + soft camera zoom + wind VFX + trajectory preview (commit 9e07151, 45a03c5, 52094d).
+- [ ] T-1.7 HUD minimal: skor, angin, tombol prediksi (dasar sudah ada di arena; menyusul penyempurnaan UI).
 - [ ] T-1.8 Workflow GitHub Actions: pengujian headless Godot (FR-QA-001).
 - [ ] T-1.9 Pengujian otomatis fisika dan skoring — dijalankan di CI setelah T-1.8.
 - [ ] T-1.10 Gerbang persetujuan: demonstrasi vertikal slice.
 
-Catatan T-1.5 (commit d5d68ca, 23cc967): scripts/gameplay/target.gd — Target murni dengan zona lingkaran konsentris (fraksi radius, validasi ketat); scripts/gameplay/scoring_service.gd — ScoringService murni: classify dari titik impact aktual (titik masuk pertama collision, bukan kedekatan visual), score_hit dengan pencocokan id target, combo (register_shot, best combo, multiplier). Nilai zona dan aturan combo TIDAK diatur spec; dicatat sebagai ADR-009 (status: diterima sementara, menunggu persetujuan pengguna) — nilai berupa data per level sehingga dapat diubah tanpa mengubah requirement. Kasus diatur: panah STUCK tanpa skor baru (advance kosong saat tidak FLYING), target terkena lebih dari sekali tidak mungkin pada T-1.5 (panah menancap; target bergerak Phase 2), beberapa target satu langkah: t terkecil yang dinilai. Bukti verifikasi: pemeriksaan numerik eksternal klasifikasi zona (pusat 50/perfect, tepi dalam inklusif, tengah 20, luar 10, tepi luar inklusif, meleset kosong). Pengujian GDScript TP-1.5, TP-1.6, TP-1.17 tertulis namun belum dijalankan di Godot (menunggu T-1.8); tidak ada klaim lulus runtime.
+Catatan T-1.6 (commit 9e07151, 45a03c5, 52094d): LevelData murni (ADR-003) + assets/levels/levels.json — 3 level percobaan sepenuhnya dari data (id, wind, drag, arrow_count, targets; zone_points dapat dioverride per target sesuai ADR-009), loader fail-fast; arena.gd/arena.tscn — scene tunggal orkestrasi (input sentuh/mouse → AimController; tembak → Arrow; hit → ScoringService; HUD minimal), main scene di project.godot; arena_camera.gd — soft zoom saat membidik (smoothing eksponensial, clamp, tanpa lompatan; kembali normal setelah tembakan/batal); wind_vfx.gd — goresan angin kartun prosedural yang arah/intensitasnya dari wind Vector2 level aktif (bukan sistem angin terpisah), z_index di bawah gameplay; trajectory_preview.gd — titik prediksi dari BallisticsModel.predict_trajectory (tanpa fisika duplikat), toggle enabled, low_effects mengurangi titik. Kamera dan VFX hanya presentasi (ADR-010) — tidak menyentuh kecepatan, arah, skor, collision, atau hasil simulasi. Kebutuhan visual baru dicatat sebagai perubahan spesifikasi v0.2: FR-GF-006 (soft camera zoom) dan FR-AV-007 (cartoon wind VFX). Bukti verifikasi: pemeriksaan numerik eksternal logika zoom (konvergensi 2 detik tanpa lompatan; kembali normal; clamp) dan pemetaan angin (0/4/8/20 m/s; arah ikut tanda). Pengujian GDScript TP-1.18..TP-1.22 tertulis namun belum dijalankan di Godot (menunggu T-1.8); tidak ada klaim runtime berhasil.
 
-Catatan T-1.4 (commit 31596a7): scripts/physics/collision_service.gd — CollisionService murni dengan swept segment-vs-circle (persamaan kuadrat, titik masuk pertama t terkecil dalam [0,1]) sehingga panah cepat tidak melewati target; scripts/gameplay/arrow.gd — node Arrow dengan akumulator timestep tetap 1/120 s (deterministik, pra-syarat Ghost Replay), status IDLE/FLYING/STUCK, validasi peluncuran, sinyal hit_target. Keputusan terdokumentasi di header berkas: kondisi "panah berhenti" direalisasikan sebagai status STUCK karena gravitasi selalu memberi percepatan pada panah di udara. Bukti verifikasi: pemeriksaan numerik eksternal algoritma collision (menembus, menyinggung, arah balik, di belakang, melesat, meleset) — pemeriksaan awal menemukan bahwa metode titik-terdekat mengembalikan titik terdalam alih-alih titik masuk, sehingga diganti algoritma persamaan kuadrat yang terverifikasi. Pengujian GDScript TP-1.12..TP-1.16 tertulis namun belum dijalankan di Godot (menunggu T-1.8); tidak ada klaim lulus runtime.
+Catatan T-1.5 (commit d5d68ca, 23cc967): scripts/gameplay/target.gd — Target murni dengan zona lingkaran konsentris (fraksi radius, validasi ketat); scripts/gameplay/scoring_service.gd — ScoringService murni: classify dari titik impact aktual (titik masuk pertama collision, bukan kedekatan visual), score_hit dengan pencocokan id target, combo (register_shot, best combo, multiplier). Nilai zona dan aturan combo dicatat sebagai ADR-009 — disetujui sementara pengguna (50/20/10; Perfect = zona pusat; batas inklusif; rumus combo konfigurabel per level). Kasus diatur: panah STUCK tanpa skor baru, target terkena lebih dari sekali tidak mungkin pada T-1.5, beberapa target satu langkah: t terkecil yang dinilai. Bukti verifikasi: pemeriksaan numerik eksternal klasifikasi zona. Pengujian GDScript TP-1.5, TP-1.6, TP-1.17 tertulis; tidak ada klaim lulus runtime.
 
-Catatan T-1.3 (commit 8ae4286): scripts/core/aim_controller.gd — mesin status bidik murni RefCounted, terpisah dari InputEvent (posisi dikirim caller) dan dari fisika (tidak membuat BallisticsModel, sesuai ADR-002). Mekanika tarik-balik: power = min(len, maxDrag)/maxDrag (kontinu 0..1), arah = normalisasi(start - current), kecepatan = arah * power * maxLaunchSpeed (m/s, konsisten SI dengan BallisticsModel). Validasi: sentuhan di luar play_area ditolak, update saat idle diabaikan, cancel mengembalikan idle, release tanpa aim mengembalikan Dictionary kosong. Bukti verifikasi: pemeriksaan numerik eksternal menemukan dan memperbaiki cacat normalisasi pada rumus awal (kecepatan 53.03 alih-alih 30.0 m/s saat clamp); rumus final terverifikasi numerik (clamp tepat 30.0 m/s, power 0.5 pada tarikan 80/160, arah benar). Pengujian GDScript TP-1.7..TP-1.11 tertulis di tests/run_tests.gd namun belum dijalankan di Godot (menunggu T-1.8); tidak ada klaim lulus runtime.
+Catatan T-1.4 (commit 31596a7): CollisionService murni swept segment-vs-circle (persamaan kuadrat, titik masuk pertama); Arrow node dengan akumulator timestep tetap 1/120 s, status IDLE/FLYING/STUCK, validasi peluncuran, sinyal hit_target. Kondisi "panah berhenti" = status STUCK (terdokumentasi di header). Pemeriksaan numerik eksternal menemukan cacat titik-terdekat (titik terdalam vs titik masuk) dan diganti persamaan kuadrat terverifikasi. TP-1.12..TP-1.16 tertulis; tidak ada klaim lulus runtime.
 
-Catatan T-1.1 (commit 7c5fdb8): proyek Godot 4.3 diinisialisasi — project.godot (orientasi portrait, renderer gl_compatibility, emulasi sentuh dari mouse untuk pengujian desktop), struktur folder lengkap sesuai 01-ARCHITECTURE.md, .gitignore (mengecualikan .godot/, artefak build, dan kredensial keystore), dan ikon placeholder. Verifikasi terbatas pada tinjauan isi berkas; Godot tidak dapat dijalankan lokal (risiko R-01).
+Catatan T-1.3 (commit 8ae4286): AimController murni, terpisah dari InputEvent dan fisika; tarik-balik dengan clamp power/kecepatan; validasi area main, pembatalan, release tanpa aim. Pemeriksaan numerik eksternal menemukan dan memperbaiki cacat normalisasi (53.03 vs 30.0 m/s). TP-1.7..TP-1.11 tertulis; tidak ada klaim lulus runtime.
 
-Catatan T-1.2 (commit 10f5042): scripts/physics/ballistics_model.gd — kelas murni RefCounted (ADR-002), satuan SI terdokumentasi pada header, model a = g - k*(v - wind), integrasi semi-implicit Euler timestep tetap (deterministik, pra-syarat Ghost Replay), validasi batas input (drag < 0, dt <= 0, point_count). tests/run_tests.gd — runner mandiri tanpa dependensi addon untuk TP-1.1..TP-1.4, dijalankan headless. Bukti verifikasi: algoritma identik diperiksa silang secara numerik (seluruh properti TP-1.1..TP-1.4 terpenuhi), namun pengujian GDScript belum dijalankan di Godot karena workflow CI belum ada (T-1.8); eksekusi riil menunggu T-1.8/T-1.9. Tidak ada klaim tes lulus sebelum dijalankan.
+Catatan T-1.1 (commit 7c5fdb8): proyek Godot 4.3 diinisialisasi; struktur folder sesuai 01-ARCHITECTURE.md; .gitignore mengecualikan .godot/, artefak build, kredensial. Verifikasi terbatas tinjauan isi berkas (R-01).
+
+Catatan T-1.2 (commit 10f5042): BallisticsModel murni (ADR-002), satuan SI, semi-implicit Euler timestep tetap, validasi input. Pemeriksaan silang numerik seluruh properti TP-1.1..TP-1.4 terpenuhi; eksekusi riil menunggu CI (T-1.8).
 
 ## Phase 2 — Kampanye dan Level (FR-LV-002..006)
 
@@ -44,7 +46,7 @@ Catatan T-1.2 (commit 10f5042): scripts/physics/ballistics_model.gd — kelas mu
 - [ ] T-2.3 Rintangan dan puzzle.
 - [ ] T-2.4 Golden Apple tiap 10 level.
 - [ ] T-2.5 Boss Challenge tiap 50 level (skrip boss sederhana).
-- [ ] T-2.6 Generator dan pengatur kesulitian level.
+- [ ] T-2.6 Generator dan pengatur kesulitan level.
 
 ## Phase 3 — Karakter dan Ekonomi (FR-CH-001..005)
 
