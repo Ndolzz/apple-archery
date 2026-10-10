@@ -19,13 +19,15 @@ Versi: 0.1. Seluruh ID requirement merujuk pada 00-SPEC.md.
 - [x] T-1.1 Inisialisasi proyek Godot 4.x (commit 7c5fdb8).
 - [x] T-1.2 BallisticsModel murni: gravitasi, drag, angin, prediksi lintasan (commit 10f5042).
 - [x] T-1.3 AimController: input tarikan untuk sentuh (commit 8ae4286).
-- [ ] T-1.4 Arrow node + collision (FR-GF-003).
+- [x] T-1.4 Arrow node + collision (commit 31596a7).
 - [ ] T-1.5 Target statis dengan zona skoring (FR-GF-005 dasar).
 - [ ] T-1.6 Arena scene tunggal + 3 level percobaan dari data (FR-LV-001 dasar).
 - [ ] T-1.7 HUD minimal: skor, angin, tombol prediksi.
 - [ ] T-1.8 Workflow GitHub Actions: pengujian headless Godot (FR-QA-001).
 - [ ] T-1.9 Pengujian otomatis fisika dan skoring — dijalankan di CI setelah T-1.8.
 - [ ] T-1.10 Gerbang persetujuan: demonstrasi vertikal slice.
+
+Catatan T-1.4 (commit 31596a7): scripts/physics/collision_service.gd — CollisionService murni dengan swept segment-vs-circle (persamaan kuadrat, titik masuk pertama t terkecil dalam [0,1]) sehingga panah cepat tidak melewati target; scripts/gameplay/arrow.gd — node Arrow dengan akumulator timestep tetap 1/120 s (deterministik, pra-syarat Ghost Replay), status IDLE/FLYING/STUCK, validasi peluncuran, sinyal hit_target. Keputusan terdokumentasi di header berkas: kondisi "panah berhenti" direalisasikan sebagai status STUCK karena gravitasi selalu memberi percepatan pada panah di udara. Bukti verifikasi: pemeriksaan numerik eksternal algoritma collision (menembus, menyinggung, arah balik, di belakang, melesat, meleset) — pemeriksaan awal menemukan bahwa metode titik-terdekat mengembalikan titik terdalam alih-alih titik masuk, sehingga diganti algoritma persamaan kuadrat yang terverifikasi. Pengujian GDScript TP-1.12..TP-1.16 tertulis namun belum dijalankan di Godot (menunggu T-1.8); tidak ada klaim lulus runtime.
 
 Catatan T-1.3 (commit 8ae4286): scripts/core/aim_controller.gd — mesin status bidik murni RefCounted, terpisah dari InputEvent (posisi dikirim caller) dan dari fisika (tidak membuat BallisticsModel, sesuai ADR-002). Mekanika tarik-balik: power = min(len, maxDrag)/maxDrag (kontinu 0..1), arah = normalisasi(start - current), kecepatan = arah * power * maxLaunchSpeed (m/s, konsisten SI dengan BallisticsModel). Validasi: sentuhan di luar play_area ditolak, update saat idle diabaikan, cancel mengembalikan idle, release tanpa aim mengembalikan Dictionary kosong. Bukti verifikasi: pemeriksaan numerik eksternal menemukan dan memperbaiki cacat normalisasi pada rumus awal (kecepatan 53.03 alih-alih 30.0 m/s saat clamp); rumus final terverifikasi numerik (clamp tepat 30.0 m/s, power 0.5 pada tarikan 80/160, arah benar). Pengujian GDScript TP-1.7..TP-1.11 tertulis di tests/run_tests.gd namun belum dijalankan di Godot (menunggu T-1.8); tidak ada klaim lulus runtime.
 

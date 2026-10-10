@@ -1,6 +1,6 @@
 # Apple Archery — Test Plan
 
-Versi: 0.1.1 (TP-1.7 s.d. TP-1.11 ditambahkan pada T-1.3; lihat catatan bagian 2)
+Versi: 0.1.2 (TP-1.12 s.d. TP-1.16 ditambahkan pada T-1.4; riwayat pada catatan bagian 2)
 
 ## 1. Strategi
 
@@ -23,6 +23,13 @@ Versi: 0.1.1 (TP-1.7 s.d. TP-1.11 ditambahkan pada T-1.3; lihat catatan bagian 2
 - TP-1.9 AimController: tarikan melewati batas maksimum dikunci pada power 1.0 dan kecepatan maksimum; arah tetap benar.
 - TP-1.10 AimController: pembatalan mengembalikan status idle; release setelah batal tidak menghasilkan tembakan.
 - TP-1.11 AimController: sentuhan di luar area permainan ditolak; release tanpa menarik mengembalikan hasil kosong.
+- TP-1.12 CollisionService: swept collision menangkap panah cepat yang dilewatkan cek diskret pada titik ujung.
+- TP-1.13 CollisionService: titik impact adalah titik masuk pertama segmen ke lingkaran (bukan titik terdalam); segmen di belakang atau jauh dari target tidak mengenai; target pertama sepanjang jalur dipilih.
+- TP-1.14 Arrow: posisi node konsisten dengan BallisticsModel pada timestep tetap (simulasi independen identik).
+- TP-1.15 Arrow: panah menancap pada titik impact, sinyal hit_target terbit, panah tidak bergerak lagi setelah menancap.
+- TP-1.16 Arrow: peluncuran kecepatan nol ditolak; peluncuran ulang saat terbang ditolak; reset mengembalikan status siap; advance saat idle diabaikan.
+
+Catatan TP-1.12 s.d. TP-1.16 (ditambahkan pada T-1.4): acceptance criteria FR-GF-003 (collision, panah menempel) memerlukan metode pengujian otomatis. Ini penambahan metode pengujian, bukan perubahan requirement.
 
 Catatan TP-1.7 s.d. TP-1.11 (ditambahkan pada T-1.3): acceptance criteria FR-GF-001 (kontinuitas tarikan, batas maksimum, pembatalan, sentuhan di luar area) memerlukan metode pengujian otomatis karena sebelumnya hanya tercantum pengujian manual. Ini penambahan metode pengujian, bukan perubahan requirement.
 
