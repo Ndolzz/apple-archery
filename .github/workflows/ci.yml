@@ -34,8 +34,7 @@ jobs:
           godot --version
 
       # Step 1: import all resources, then fail if the log contains script or
-      # resource load errors. Matched lines are emitted as annotations for
-      # public traceability (logs require authentication).
+      # resource load errors. Matched log lines are emitted as annotations.
       - name: Import project resources (headless)
         run: |
           set -euxo pipefail
@@ -49,7 +48,6 @@ jobs:
           fi
 
       # Step 2: parse check every GDScript file. Any parse failure fails the job.
-      # (if: always() so a single diagnostic run collects all evidence.)
       - name: Parse check all GDScript files
         if: always()
         run: |
@@ -69,14 +67,14 @@ jobs:
           exit $status
 
       # Step 3: run the full headless test suite. Runner exits nonzero on any
-      # test failure; pipefail propagates the Godot exit code through tee.
+      # test failure; every failing check is emitted as a public annotation.
       - name: Run headless test suite (TP-1.1 .. TP-1.22)
         if: always()
         run: |
           set -uxo pipefail
           godot --headless --path . --script tests/run_tests.gd 2>&1 | tee test_output.log
           status=${PIPESTATUS[0]}
-          grep '^FAIL:' test_output.log | head -10 | while IFS= read -r line; do
+          grep '^FAIL:' test_output.log | while IFS= read -r line; do
             echo "::error::TEST-FAIL: ${line:0:250}"
           done
           grep -E 'Phase 1 module tests' test_output.log | while IFS= read -r line; do
@@ -84,17 +82,18 @@ jobs:
           done
           exit $status
 
-      # Step 4: traceability guard — verify that all 22 TP-1.x test groups
-      # actually executed and that no check reported FAIL.
+      # Step 4: traceability guard — all 22 TP-1.x groups must have executed
+      # (PASS or FAIL) and no check may report FAIL.
       - name: Verify all TP-1.x groups executed with zero failures
         if: always()
         run: |
           set -euxo pipefail
-          found=$(grep -oE '^(PASS|FAIL): TP-1\.[0-9]+' test_output.log | sort -u | wc -l || true)
+          found=$(grep -oE '^(PASS|FAIL): TP-1\.[0-9]+' test_output.log | grep -oE 'TP-1\.[0-9]+' | sort -u | wc -l || true)
+          passed=$(grep -c '^PASS:' test_output.log || true)
           failed=$(grep -c '^FAIL:' test_output.log || true)
-          echo "Distinct TP-1.x groups present in output: ${found} (expected 22)"
-          echo "Failed checks: ${failed} (expected 0)"
-          echo "::error::VERIFY: found=${found}/22 TP groups, failed checks=${failed}"
+          echo "Distinct TP-1.x groups executed: ${found} (expected 22)"
+          echo "Checks passed: ${passed}; checks failed: ${failed} (expected 0)"
+          echo "::error::VERIFY: groups=${found}/22, passed=${passed}, failed=${failed}"
           for n in $(seq 1 22); do
             if ! grep -qE "^(PASS|FAIL): TP-1\.$n" test_output.log; then
               echo "::error::VERIFY: TP-1.$n did not execute at all"
