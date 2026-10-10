@@ -1,6 +1,6 @@
 # Apple Archery — Traceability Matrix
 
-Versi: 0.1.3 (diperbarui setelah T-1.4 berdasarkan bukti aktual; kolom Status memisahkan "terimplementasi" dan "terverifikasi di CI" sesuai aturan anti-klaim tanpa bukti).
+Versi: 0.1.4 (diperbarui setelah T-1.5 berdasarkan bukti aktual; kolom Status memisahkan "terimplementasi" dan "terverifikasi di CI" sesuai aturan anti-klaim tanpa bukti).
 
 | Requirement | Tugas (03-BACKLOG) | Pengujian (04-TEST-PLAN) | Fase | Status |
 |---|---|---|---|---|
@@ -8,7 +8,7 @@ Versi: 0.1.3 (diperbarui setelah T-1.4 berdasarkan bukti aktual; kolom Status me
 | FR-GF-002 Fisika realistis | T-1.2 | TP-1.1, TP-1.2, TP-1.3 | 1 | Terimplementasi (commit 10f5042); tes tertulis, eksekusi menunggu CI (T-1.8/T-1.9) |
 | FR-GF-003 Collision | T-1.4 | TP-1.12, TP-1.13, TP-1.14, TP-1.15, TP-1.16, Manual P1 (panah menempel benar) | 1 | Terimplementasi (commit 31596a7); tes tertulis, eksekusi menunggu CI (T-1.8/T-1.9) |
 | FR-GF-004 Prediksi lintasan | T-1.2 | TP-1.4 | 1 | Terimplementasi (commit 10f5042); tes tertulis, eksekusi menunggu CI (T-1.8/T-1.9) |
-| FR-GF-005 Skoring/Perfect/combo | T-1.5 | TP-1.5, TP-1.6 | 1 | Belum |
+| FR-GF-005 Skoring/Perfect/combo | T-1.5 | TP-1.5, TP-1.6, TP-1.17, Manual P1 (visual zona) | 1 | Terimplementasi (commit d5d68ca, 23cc967); nilai zona = ADR-009 menunggu persetujuan; tes tertulis, eksekusi menunggu CI (T-1.8/T-1.9) |
 | FR-LV-001 Level bertahap | T-1.6, T-2.6 | TP-2.1 | 1-2 | Belum |
 | FR-LV-002 Peta dunia | T-2.1 | Manual P2 | 2 | Belum |
 | FR-LV-003 Target bergerak | T-2.2 | Manual P2 | 2 | Belum |

@@ -1,6 +1,6 @@
 # Apple Archery — Test Plan
 
-Versi: 0.1.2 (TP-1.12 s.d. TP-1.16 ditambahkan pada T-1.4; riwayat pada catatan bagian 2)
+Versi: 0.1.3 (TP-1.17 ditambahkan pada T-1.5; nilai zona mengikuti ADR-009)
 
 ## 1. Strategi
 
@@ -16,8 +16,8 @@ Versi: 0.1.2 (TP-1.12 s.d. TP-1.16 ditambahkan pada T-1.4; riwayat pada catatan 
 - TP-1.2 BallisticsModel: drag mengurangi jangkauan dibanding tanpa drag.
 - TP-1.3 BallisticsModel: angin arah positif/negatif menggeser titik impact sesuai tanda.
 - TP-1.4 Prediksi lintasan: titik pertama sama dengan posisi awal; jumlah titik sesuai konfigurasi.
-- TP-1.5 Skoring: zona pusat > zona tepi; Perfect Shot terdeteksi pada pusat.
-- TP-1.6 Combo: bertambah pada hit berturut-turut; reset saat meleset.
+- TP-1.5 Skoring: zona pusat > zona tepi; Perfect Shot terdeteksi pada pusat; tiap zona memberi poin sesuai ADR-009; titik di luar target tidak menghasilkan skor.
+- TP-1.6 Combo: bertambah pada hit berturut-turut; reset saat meleset; best combo dicatat; multiplier sesuai ADR-009.
 - TP-1.7 AimController: begin_aim di dalam area berhasil; status aiming aktif; drag awal nol.
 - TP-1.8 AimController: power dan arah kontinu mengikuti input; arah tembakan berlawanan arah tarikan; release mengakhiri status aiming.
 - TP-1.9 AimController: tarikan melewati batas maksimum dikunci pada power 1.0 dan kecepatan maksimum; arah tetap benar.
@@ -28,6 +28,9 @@ Versi: 0.1.2 (TP-1.12 s.d. TP-1.16 ditambahkan pada T-1.4; riwayat pada catatan 
 - TP-1.14 Arrow: posisi node konsisten dengan BallisticsModel pada timestep tetap (simulasi independen identik).
 - TP-1.15 Arrow: panah menancap pada titik impact, sinyal hit_target terbit, panah tidak bergerak lagi setelah menancap.
 - TP-1.16 Arrow: peluncuran kecepatan nol ditolak; peluncuran ulang saat terbang ditolak; reset mengembalikan status siap; advance saat idle diabaikan.
+- TP-1.17 ScoringService/Target: batas antarzona inklusif terhadap zona dalam; tepi luar target (d == radius) tetap dihitung; skor dihitung dari titik masuk pertama collision (bukan posisi akhir panah); panah STUCK tidak menghasilkan skor/kedua; beberapa target satu langkah: target pertama sepanjang jalur yang dinilai; id target tidak cocok tidak menghasilkan skor.
+
+Catatan TP-1.17 (ditambahkan pada T-1.5): AC FR-GF-005 mengenai pencegahan skor ganda dan batas zona memerlukan metode pengujian otomatis. Penambahan metode pengujian, bukan perubahan requirement. Nilai zona mengikuti ADR-009 (menunggu persetujuan pengguna).
 
 Catatan TP-1.12 s.d. TP-1.16 (ditambahkan pada T-1.4): acceptance criteria FR-GF-003 (collision, panah menempel) memerlukan metode pengujian otomatis. Ini penambahan metode pengujian, bukan perubahan requirement.
 

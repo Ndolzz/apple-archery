@@ -20,12 +20,14 @@ Versi: 0.1. Seluruh ID requirement merujuk pada 00-SPEC.md.
 - [x] T-1.2 BallisticsModel murni: gravitasi, drag, angin, prediksi lintasan (commit 10f5042).
 - [x] T-1.3 AimController: input tarikan untuk sentuh (commit 8ae4286).
 - [x] T-1.4 Arrow node + collision (commit 31596a7).
-- [ ] T-1.5 Target statis dengan zona skoring (FR-GF-005 dasar).
+- [x] T-1.5 Target statis dengan zona skoring (commit d5d68ca, 23cc967).
 - [ ] T-1.6 Arena scene tunggal + 3 level percobaan dari data (FR-LV-001 dasar).
 - [ ] T-1.7 HUD minimal: skor, angin, tombol prediksi.
 - [ ] T-1.8 Workflow GitHub Actions: pengujian headless Godot (FR-QA-001).
 - [ ] T-1.9 Pengujian otomatis fisika dan skoring — dijalankan di CI setelah T-1.8.
 - [ ] T-1.10 Gerbang persetujuan: demonstrasi vertikal slice.
+
+Catatan T-1.5 (commit d5d68ca, 23cc967): scripts/gameplay/target.gd — Target murni dengan zona lingkaran konsentris (fraksi radius, validasi ketat); scripts/gameplay/scoring_service.gd — ScoringService murni: classify dari titik impact aktual (titik masuk pertama collision, bukan kedekatan visual), score_hit dengan pencocokan id target, combo (register_shot, best combo, multiplier). Nilai zona dan aturan combo TIDAK diatur spec; dicatat sebagai ADR-009 (status: diterima sementara, menunggu persetujuan pengguna) — nilai berupa data per level sehingga dapat diubah tanpa mengubah requirement. Kasus diatur: panah STUCK tanpa skor baru (advance kosong saat tidak FLYING), target terkena lebih dari sekali tidak mungkin pada T-1.5 (panah menancap; target bergerak Phase 2), beberapa target satu langkah: t terkecil yang dinilai. Bukti verifikasi: pemeriksaan numerik eksternal klasifikasi zona (pusat 50/perfect, tepi dalam inklusif, tengah 20, luar 10, tepi luar inklusif, meleset kosong). Pengujian GDScript TP-1.5, TP-1.6, TP-1.17 tertulis namun belum dijalankan di Godot (menunggu T-1.8); tidak ada klaim lulus runtime.
 
 Catatan T-1.4 (commit 31596a7): scripts/physics/collision_service.gd — CollisionService murni dengan swept segment-vs-circle (persamaan kuadrat, titik masuk pertama t terkecil dalam [0,1]) sehingga panah cepat tidak melewati target; scripts/gameplay/arrow.gd — node Arrow dengan akumulator timestep tetap 1/120 s (deterministik, pra-syarat Ghost Replay), status IDLE/FLYING/STUCK, validasi peluncuran, sinyal hit_target. Keputusan terdokumentasi di header berkas: kondisi "panah berhenti" direalisasikan sebagai status STUCK karena gravitasi selalu memberi percepatan pada panah di udara. Bukti verifikasi: pemeriksaan numerik eksternal algoritma collision (menembus, menyinggung, arah balik, di belakang, melesat, meleset) — pemeriksaan awal menemukan bahwa metode titik-terdekat mengembalikan titik terdalam alih-alih titik masuk, sehingga diganti algoritma persamaan kuadrat yang terverifikasi. Pengujian GDScript TP-1.12..TP-1.16 tertulis namun belum dijalankan di Godot (menunggu T-1.8); tidak ada klaim lulus runtime.
 
@@ -42,7 +44,7 @@ Catatan T-1.2 (commit 10f5042): scripts/physics/ballistics_model.gd — kelas mu
 - [ ] T-2.3 Rintangan dan puzzle.
 - [ ] T-2.4 Golden Apple tiap 10 level.
 - [ ] T-2.5 Boss Challenge tiap 50 level (skrip boss sederhana).
-- [ ] T-2.6 Generator dan pengatur kesulitan level.
+- [ ] T-2.6 Generator dan pengatur kesulitian level.
 
 ## Phase 3 — Karakter dan Ekonomi (FR-CH-001..005)
 

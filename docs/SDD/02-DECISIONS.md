@@ -38,3 +38,15 @@ Keputusan: Tidak masuk baseline. Keputusan monetisasi ditunda hingga setelah Pha
 ## ADR-008: Cadangan keputusan sebelumnya
 Status: Tidak ada.
 Catatan: Repositori kosong saat baseline dibuat; tidak ada keputusan sebelumnya yang perlu dipertahankan atau dibatalkan.
+
+## ADR-009: Nilai zona skor dan aturan combo (T-1.5)
+Status: Diterima sementara — menunggu persetujuan pengguna
+Konteks: Spec FR-GF-005 hanya mengamanatkan "zona pusat memberi skor lebih tinggi" dan "combo bertambah pada tembakan berturut-turut yang berhasil"; nilai konkret tidak diatur di dokumen SDD mana pun.
+Keputusan (data, dapat diubah tanpa mengubah requirement):
+1. Target = lingkaran konsentris; zona dinyatakan sebagai fraksi radius (0..1]; 3 zona bawaan dengan fraksi 1/3, 2/3, 1.0 dan poin 50, 20, 10.
+2. Perfect Shot = tembakan pada zona 0 (pusat).
+3. Batas antarzona inklusif terhadap zona dalam: jarak <= radius zona menghasilkan zona tersebut (konsisten dengan collision yang menerima titik tepat pada batas target).
+4. Combo: penghitung tembakan berturut-turut yang berhasil; reset saat meleset; multiplier combo = 1 + 0.25 * (combo - 1) untuk combo >= 2; best_combo dicatat.
+Kasus diatur/didokumentasikan: panah STUCK tidak menghasilkan skor baru (Arrow.advance kosong saat tidak FLYING); target terkena lebih dari sekali tidak mungkin pada T-1.5 karena panah menancap pada hit pertama (target bergerak: Phase 2); beberapa target satu langkah: target pertama sepanjang jalur (t terkecil) yang dinilai.
+Alasan: Memenuhi AC FR-GF-005 tanpa mengarang aturan yang bertentangan; seluruh nilai adalah data per level sehingga dapat disetel ulang tanpa perubahan kode.
+Dampak: Tidak mengubah requirement; apabila pengguna menolak nilai ini, hanya konstanta Target/ScoringService yang berubah.
