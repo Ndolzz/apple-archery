@@ -56,7 +56,10 @@ func _test_tp_1_1_analytic_parabola() -> void:
     for i in range(steps):
         m.step(dt)
     var analytic := Vector2(v0.x * t_end, v0.y * t_end + 0.5 * g.y * t_end * t_end)
-    var err_bound := 0.5 * 9.8 * dt * t_end + 0.000001
+    # Batas metode semi-implicit Euler: |g| * dt * t / 2 (= 0.049 di sini).
+    # Margin tambahan 0.001 menampung akumulasi pembulatan float32 Vector2 Godot
+    # (margin lama 1e-6 lebih kecil dari noise numerik; lihat catatan T-1.8).
+    var err_bound := 0.5 * 9.8 * dt * t_end + 0.001
     _check(m.position.distance_to(analytic) <= err_bound, "TP-1.1 analytic parabola within tolerance")
 
 
@@ -221,10 +224,14 @@ func _test_tp_1_13_impact_point_first_entry() -> void:
 
 
 ## TP-1.14: posisi node panah konsisten dengan BallisticsModel pada timestep tetap.
+## advance() memproses delta per frame dan dipatok MAX_FRAME_DELTA (kontrak Arrow),
+## sehingga simulasi 0.5 s dilakukan sebagai 30 frame @ 1/60 s — bukan satu panggilan
+## advance(0.5) yang hanya mensimulasikan 0.25 s (akar kegagalan run CI pertama).
 func _test_tp_1_14_arrow_flight_consistency() -> void:
     var arrow := Arrow.new()
     arrow.launch(Vector2.ZERO, Vector2(24.0, 0.0), Vector2(0.0, -9.8))
-    arrow.advance(0.5)
+    for i in range(30):
+        arrow.advance(1.0 / 60.0)
     var m := BallisticsModel.new(Vector2.ZERO, Vector2(24.0, 0.0), Vector2(0.0, -9.8))
     var steps := int(0.5 / Arrow.FIXED_TIMESTEP)
     for i in range(steps):
@@ -237,15 +244,22 @@ func _test_tp_1_14_arrow_flight_consistency() -> void:
 
 
 ## TP-1.15: panah menancap pada titik impact dan tidak bergerak lagi.
+## Lintasan lurus (gravitasi nol) agar geometri deterministik: target (12, 0)
+## radius 0.5, panah dari (0, 0) dengan 24 m/s; titik masuk pertama x = 11.5.
+## Gravitasi pada versi awal membuat panah turun ~1.2 m sehingga meleset
+## (akar kegagalan run CI pertama; integritas stick tidak bergantung gravitasi).
 func _test_tp_1_15_arrow_sticks_on_hit() -> void:
     var arrow := Arrow.new()
     arrow.targets = [{"position": Vector2(12.0, 0.0), "radius": 0.5, "id": "t1"}]
     var hit_detected: Dictionary = {}
     arrow.hit_target.connect(func(result: Dictionary) -> void: hit_detected = result)
-    arrow.launch(Vector2.ZERO, Vector2(24.0, 0.0), Vector2(0.0, -9.8))
-    arrow.advance(0.5)
+    arrow.launch(Vector2.ZERO, Vector2(24.0, 0.0), Vector2.ZERO)
+    for i in range(30):
+        arrow.advance(1.0 / 60.0)
     _check(arrow.is_stuck(), "TP-1.15 arrow is stuck after hit")
     _check(not hit_detected.is_empty(), "TP-1.15 hit_target signal emitted")
+    _check(arrow.position.distance_to(Vector2(11.5, 0.0)) < 0.001,
+        "TP-1.15 arrow sticks at first-entry point (x=11.5, tolerance float32 1 mm)")
     var stuck_pos: Vector2 = arrow.position
     arrow.advance(1.0)
     _check(arrow.position == stuck_pos, "TP-1.15 stuck arrow does not move on further advance")
@@ -273,8 +287,8 @@ func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
     var exact_outer := ScoringService.classify(t, Vector2(10.0, 8.0))
     _check(not exact_outer.is_empty() and int(exact_outer.points) == 10,
         "TP-1.17 exact outer edge (d == radius) is inclusive and scores outer zone")
-    var just_inside := ScoringService.classify(t, Vector2(10.0, 5.0 + 2.0 / 3.0 + 0.001))
-    _check(not just_inside.is_empty() and int(just_inside.points) == 10,
+    var just_outside := ScoringService.classify(t, Vector2(10.0, 5.0 + 2.0 + 0.001))
+    _check(not just_outside.is_empty() and int(just_outside.points) == 10,
         "TP-1.17 just outside middle boundary scores outer zone, not middle")
     var middle_edge := ScoringService.classify(t, Vector2(10.0, 5.0 + 2.0))
     _check(not middle_edge.is_empty() and int(middle_edge.points) == 20,
@@ -283,9 +297,15 @@ func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
         Vector2(0.0, 5.0), Vector2(20.0, 5.0), Vector2(10.0, 5.0), 3.0
     )
     _check(not hit.is_empty(), "TP-1.17 swept hit detected")
+    # Titik masuk pertama lingkaran selalu berada tepat pada radius (x=7, d=3.0),
+    # sehingga menurut ADR-009 (batas inklusif zona dalam) zona yang didapat adalah
+    # zona terluar (10 poin), bukan perfect. Ekspektasi lama (50/perfect) bertentangan
+    # dengan ADR-009; catatan desain terkait dicatat di 06-RISKS.md (T-1.8).
     var scored := ScoringService.score_hit(hit, t)
-    _check(not scored.is_empty() and int(scored.points) == 50 and bool(scored.is_perfect),
-        "TP-1.17 score from first-entry point (x=7, zone 0), not final position (x=20)")
+    _check(not scored.is_empty() and int(scored.points) == 10 and not bool(scored.is_perfect),
+        "TP-1.17 score from first-entry point (x=7, d=3.0) gives inclusive outer zone (10)")
+    _check(ScoringService.classify(t, Vector2(20.0, 5.0)).is_empty(),
+        "TP-1.17 final position (x=20) is outside target and would score nothing")
     var arrow := Arrow.new()
     var s := ScoringService.new()
     arrow.targets = [t.to_collision_dict()]
@@ -305,8 +325,10 @@ func _test_tp_1_17_scoring_boundaries_and_no_double() -> void:
     _check(not multi_hit.is_empty() and String(multi_hit.id) == "near",
         "TP-1.17 multi-target: first target along path selected")
     var multi_score := ScoringService.score_hit(multi_hit, t_near)
-    _check(not multi_score.is_empty() and bool(multi_score.is_perfect),
-        "TP-1.17 multi-target: score computed from selected target (near)")
+    _check(not multi_score.is_empty() and int(multi_score.points) == 10 and not bool(multi_score.is_perfect),
+        "TP-1.17 multi-target: score computed from selected target (near, entry at its outer edge)")
+    _check(ScoringService.score_hit(multi_hit, t_far).is_empty(),
+        "TP-1.17 multi-target: selected target used, not the far one")
 
 
 ## TP-1.18: level termuat dari data JSON — 3 level, id unik, parameter benar.
