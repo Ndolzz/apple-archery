@@ -1,4 +1,4 @@
-## Pengujian BallisticsModel — TP-1.1 s.d. TP-1.4 (04-TEST-PLAN).
+## Pengujian BallisticsModel dan AimController — TP-1.1 s.d. TP-1.11 (04-TEST-PLAN).
 ## Runner mandiri tanpa dependensi addon (NFR-002): dijalankan dengan
 ##   godot --headless --path . --script tests/run_tests.gd
 ## Keluar dengan kode 0 bila seluruh pengujian lulus, 1 bila ada kegagalan.
@@ -14,6 +14,11 @@ func _init() -> void:
     _test_tp_1_2_drag_reduces_range()
     _test_tp_1_3_wind_shifts_impact()
     _test_tp_1_4_prediction_shape()
+    _test_tp_1_7_begin_aim_in_area()
+    _test_tp_1_8_power_direction_continuous()
+    _test_tp_1_9_max_drag_clamped()
+    _test_tp_1_10_cancel_resets()
+    _test_tp_1_11_invalid_touch_rejected()
     _print_summary()
     quit(1 if _failures.size() > 0 else 0)
 
@@ -73,6 +78,61 @@ func _test_tp_1_4_prediction_shape() -> void:
     _check(unchanged, "TP-1.4 prediction does not mutate model state")
 
 
+## TP-1.7: begin_aim di dalam area berhasil dan status menjadi aiming.
+func _test_tp_1_7_begin_aim_in_area() -> void:
+    var a := AimController.new(Rect2(0.0, 0.0, 1280.0, 720.0))
+    _check(a.begin_aim(Vector2(200.0, 600.0)), "TP-1.7 begin_aim inside area accepted")
+    _check(a.is_aiming(), "TP-1.7 state is aiming after begin")
+    _check(a.get_drag_vector() == Vector2.ZERO, "TP-1.7 zero drag right after begin")
+
+
+## TP-1.8: power dan arah kontinu mengikuti input (tarik separuh -> power separuh,
+## arah tembakan berlawanan arah tarikan).
+func _test_tp_1_8_power_direction_continuous() -> void:
+    var a := AimController.new(Rect2(0.0, 0.0, 1280.0, 720.0), 160.0, 30.0)
+    a.begin_aim(Vector2(100.0, 100.0))
+    a.update_aim(Vector2(80.0, 80.0))
+    var expected_power := 20.0 * sqrt(2.0) / 160.0
+    _check(absf(a.get_power() - expected_power) < 0.000001, "TP-1.8 power continuous at partial pull")
+    var shot := a.release()
+    _check(shot.velocity.x > 0.0 and shot.velocity.y > 0.0, "TP-1.8 aim direction opposite to pull")
+    _check(absf(float(shot.power) - expected_power) < 0.000001, "TP-1.8 released power matches drag")
+    _check(not a.is_aiming(), "TP-1.8 release ends aiming state")
+
+
+## TP-1.9: tarikan melewati batas maksimum dikunci pada power 1.0 dan kecepatan maksimum.
+func _test_tp_1_9_max_drag_clamped() -> void:
+    var a := AimController.new(Rect2(0.0, 0.0, 1280.0, 720.0), 160.0, 30.0)
+    a.begin_aim(Vector2(100.0, 100.0))
+    a.update_aim(Vector2(-100.0, -100.0))
+    _check(absf(a.get_power() - 1.0) < 0.000001, "TP-1.9 power clamped to 1.0")
+    var shot := a.release()
+    _check(absf(float(shot.velocity.length()) - 30.0) < 0.000001, "TP-1.9 launch speed clamped to max")
+    _check(shot.velocity.normalized() == Vector2(1.0, 1.0).normalized(), "TP-1.9 direction preserved beyond clamp")
+
+
+## TP-1.10: pembatalan mengembalikan status awal; release setelah batal tidak menghasilkan tembakan.
+func _test_tp_1_10_cancel_resets() -> void:
+    var a := AimController.new(Rect2(0.0, 0.0, 1280.0, 720.0), 160.0, 30.0)
+    a.begin_aim(Vector2(100.0, 100.0))
+    a.update_aim(Vector2(40.0, 40.0))
+    a.cancel_aim()
+    _check(not a.is_aiming(), "TP-1.10 cancel returns to idle")
+    _check(a.get_power() == 0.0, "TP-1.10 power zero after cancel")
+    var shot := a.release()
+    _check(shot.is_empty(), "TP-1.10 release after cancel produces no shot")
+
+
+## TP-1.11: sentuhan di luar area permainan ditolak; release tanpa menarik mengembalikan kosong.
+func _test_tp_1_11_invalid_touch_rejected() -> void:
+    var a := AimController.new(Rect2(0.0, 0.0, 400.0, 400.0), 160.0, 30.0)
+    _check(not a.begin_aim(Vector2(500.0, 100.0)), "TP-1.11 touch outside play area rejected")
+    _check(not a.is_aiming(), "TP-1.11 state stays idle after rejected touch")
+    var shot := a.release()
+    _check(shot.is_empty(), "TP-1.11 release without aim returns empty")
+    _check(not a.begin_aim(Vector2(10.0, 10.0)) or a.is_aiming(), "TP-1.11 valid touch still accepted after rejection")
+
+
 ## Simulasi hingga panah kembali ke ketinggian awal (jatuh melewati garis start).
 func _range_until_ground(v0: Vector2, g: Vector2, wind: Vector2, drag: float, dt: float) -> float:
     var m := BallisticsModel.new(Vector2.ZERO, v0, g, wind, drag)
@@ -88,6 +148,6 @@ func _range_until_ground(v0: Vector2, g: Vector2, wind: Vector2, drag: float, dt
 
 func _print_summary() -> void:
     print("")
-    print("BallisticsModel tests: %d passed, %d failed" % [_passed, _failures.size()])
+    print("BallisticsModel + AimController tests: %d passed, %d failed" % [_passed, _failures.size()])
     for label in _failures:
         print("  FAILED: %s" % label)
