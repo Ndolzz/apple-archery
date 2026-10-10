@@ -16,7 +16,7 @@ Versi: 0.1. Seluruh ID requirement merujuk pada 00-SPEC.md.
 
 ## Phase 1 — Vertical Slice (FR-GF-001..005, FR-LV-001 parsial)
 
-- [ ] T-1.1 Inisialisasi proyek Godot 4.x (project.godot, struktur folder, .gitignore, .gdlintrc bila tersedia).
+- [x] T-1.1 Inisialisasi proyek Godot 4.x (project.godot, struktur folder, .gitignore, .gdlintrc bila tersedia).
 - [ ] T-1.2 BallisticsModel murni: gravitasi, drag, angin, prediksi lintasan (FR-GF-002, FR-GF-004).
 - [ ] T-1.3 AimController: input tarikan untuk sentuh (FR-GF-001).
 - [ ] T-1.4 Arrow node + collision (FR-GF-003).
@@ -26,6 +26,8 @@ Versi: 0.1. Seluruh ID requirement merujuk pada 00-SPEC.md.
 - [ ] T-1.8 Workflow GitHub Actions: pengujian headless Godot (FR-QA-001).
 - [ ] T-1.9 Pengujian otomatis fisika dan skoring.
 - [ ] T-1.10 Gerbang persetujuan: demonstrasi vertikal slice.
+
+Catatan T-1.1 (commit 7c5fdb8): proyek Godot 4.3 diinisialisasi — project.godot (orientasi portrait, renderer gl_compatibility, emulasi sentuh dari mouse untuk pengujian desktop), struktur folder lengkap sesuai 01-ARCHITECTURE.md, .gitignore (mengecualikan .godot/, artefak build, dan kredensial keystore), dan ikon placeholder. Verifikasi terbatas pada tinjauan isi berkas; Godot tidak dapat dijalankan lokal (risiko R-01).
 
 ## Phase 2 — Kampanye dan Level (FR-LV-002..006)
 
