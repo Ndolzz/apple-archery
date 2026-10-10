@@ -1,0 +1,35 @@
+{
+  "levels": [
+    {
+      "id": "trial_1",
+      "name": "Sasaran Pertama",
+      "wind": { "x": 0.0, "y": 0.0 },
+      "drag": 0.0,
+      "arrow_count": 5,
+      "targets": [
+        { "id": "t1", "position": { "x": 18.0, "y": 12.0 }, "radius": 1.5 }
+      ]
+    },
+    {
+      "id": "trial_2",
+      "name": "Angin Lembah",
+      "wind": { "x": 2.5, "y": 0.0 },
+      "drag": 0.15,
+      "arrow_count": 5,
+      "targets": [
+        { "id": "t1", "position": { "x": 20.0, "y": 14.0 }, "radius": 1.2 }
+      ]
+    },
+    {
+      "id": "trial_3",
+      "name": "Dua Sasanan",
+      "wind": { "x": -1.5, "y": 0.0 },
+      "drag": 0.2,
+      "arrow_count": 6,
+      "targets": [
+        { "id": "t1", "position": { "x": 16.0, "y": 10.0 }, "radius": 1.0 },
+        { "id": "t2", "position": { "x": 22.0, "y": 16.0 }, "radius": 1.3 }
+      ]
+    }
+  ]
+}
