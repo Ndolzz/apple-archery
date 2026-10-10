@@ -1,0 +1,83 @@
+name: CI
+
+# T-1.8 — Headless test workflow (FR-QA-001).
+# Godot version is pinned to 4.3-stable because the project targets Godot 4.3
+# (project.godot: config/features=PackedStringArray("4.3")). No "latest".
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: 4.3-stable
+
+jobs:
+  test:
+    name: Headless import, parse check, and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Godot 4.3-stable (pinned to project target version)
+        run: |
+          set -euxo pipefail
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          unzip -q godot.zip
+          sudo mv "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+          godot --version
+
+      # Step 1: import all resources. Fails the job if the project cannot be
+      # loaded or resource import fails.
+      - name: Import project resources (headless)
+        run: |
+          set -euxo pipefail
+          godot --headless --path . --import 2>&1 | tee import.log
+          ! grep -E "SCRIPT ERROR|Parse Error|Failed to load" import.log
+
+      # Step 2: parse check every GDScript file. Any parse failure fails the job.
+      - name: Parse check all GDScript files
+        run: |
+          set -euxo pipefail
+          status=0
+          for script in $(git ls-files '*.gd'); do
+            echo "Parsing res://$script"
+            godot --headless --path . --check-only --script "res://$script" || status=1
+          done
+          exit $status
+
+      # Step 3: run the full headless test suite. Runner exits nonzero on any
+      # test failure; pipefail propagates the Godot exit code through tee.
+      - name: Run headless test suite (TP-1.1 .. TP-1.22)
+        run: |
+          set -euxo pipefail
+          godot --headless --path . --script tests/run_tests.gd 2>&1 | tee test_output.log
+
+      # Step 4: traceability guard — verify that all 22 TP-1.x test groups
+      # actually executed and that no check reported FAIL.
+      - name: Verify all TP-1.x groups executed with zero failures
+        if: always()
+        run: |
+          set -euxo pipefail
+          found=$(grep -oE '^PASS: TP-1\.[0-9]+' test_output.log | sort -u | wc -l || true)
+          failed=$(grep -c '^FAIL:' test_output.log || true)
+          echo "Distinct TP-1.x groups with at least one PASS: ${found} (expected 22)"
+          echo "Failed checks: ${failed} (expected 0)"
+          test "$found" -eq 22
+          test "$failed" -eq 0
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: |
+            import.log
+            test_output.log
+          if-no-files-found: ignore
