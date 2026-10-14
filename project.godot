@@ -10,7 +10,7 @@ config/description="2D cartoon-style archery game. Developed by Naze."
 config/version="0.1.0"
 config/features=PackedStringArray("4.3")
 config/icon="res://icon.svg"
-run/main_scene="res://scenes/gameplay/arena.tscn"
+run/main_scene="res://scenes/ui/splash.tscn"
 run/user_data_custom_name="AppleArchery"
 
 [display]

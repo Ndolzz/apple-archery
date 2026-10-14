@@ -68,7 +68,7 @@ jobs:
 
       # Step 3: run the full headless test suite. Runner exits nonzero on any
       # test failure; pipefail propagates the Godot exit code through tee.
-      - name: Run headless test suite (TP-1.1 .. TP-1.24)
+      - name: Run headless test suite (TP-1.1 .. TP-1.24, TP-6.2)
         if: always()
         run: |
           set -uxo pipefail
@@ -105,6 +105,10 @@ jobs:
               echo "::error::VERIFY: TP-1.$n did not execute at all"
             fi
           done
+          if ! grep -qE "^(PASS|FAIL): TP-6\.2" test_output.log; then
+            echo "::error::VERIFY: TP-6.2 did not execute at all"
+            exit 1
+          fi
           test "$found" -eq 24
           test "$failed" -eq 0
 

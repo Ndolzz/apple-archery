@@ -1,4 +1,4 @@
-## Pengujian modul Phase 1 — TP-1.1 s.d. TP-1.24.
+## Pengujian modul — TP-1.1 s.d. TP-1.24 dan TP-6.2 (T-6.10 kontrak splash/menu).
 ## Runner mandiri tanpa dependensi addon (NFR-002): dijalankan dengan
 ##   godot --headless --path . --script tests/run_tests.gd
 ## Keluar dengan kode 0 bila seluruh pengujian lulus, 1 bila ada kegagalan.
@@ -34,6 +34,7 @@ func _init() -> void:
     _test_tp_1_22_trajectory_preview_uses_model()
     _test_tp_1_23_penetration_scoring_regression()
     _test_tp_1_24_hud_pure_logic()
+    _test_tp_6_2_splash_and_menu_contract()
     _print_summary()
     quit(1 if _failures.size() > 0 else 0)
 
@@ -540,6 +541,35 @@ func _test_tp_1_22_trajectory_preview_uses_model() -> void:
     preview.enabled = false
     preview.update_prediction(origin, velocity, BallisticsModel.DEFAULT_GRAVITY, wind, 0.15)
     _check(preview.get_points().is_empty(), "TP-1.22 disabled preview clears points (FR-GF-004 toggle)")
+
+
+## TP-6.2: kontrak splash "Archery Signature" dan menu utama placeholder (T-6.10, ADR-012).
+## Logika murni garis waktu + pemuatan scene headless + konfigurasi startup.
+func _test_tp_6_2_splash_and_menu_contract() -> void:
+    _check(absf(Splash.total_duration() - 2.5) < 0.000001,
+        "TP-6.2 splash timeline total duration is 2.5 s")
+    _check(Splash.phase_for_time(0.2) == "background" and Splash.phase_for_time(0.4) == "bow",
+        "TP-6.2 phase boundaries: background ends / bow starts at 0.4 s")
+    _check(Splash.phase_for_time(0.9) == "arrow" and Splash.phase_for_time(1.5) == "target",
+        "TP-6.2 phase boundaries: arrow ends / target starts at 1.5 s")
+    _check(Splash.phase_for_time(1.9) == "title" and Splash.phase_for_time(2.3) == "hold",
+        "TP-6.2 phase boundaries: title ends / hold starts at 2.3 s")
+    _check(Splash.phase_for_time(-1.0) == "background" and Splash.phase_for_time(10.0) == "hold",
+        "TP-6.2 phases defined for any elapsed value (clamped to timeline)")
+    _check(not Splash.should_transition(2.499),
+        "TP-6.2 no transition before the timeline completes (no skip, no premature exit)")
+    _check(Splash.should_transition(2.5) and Splash.should_transition(3.0),
+        "TP-6.2 transition allowed only at/after the timeline completes")
+    _check(Splash.menu_scene_path() == "res://scenes/ui/main_menu.tscn",
+        "TP-6.2 transition target is the main menu scene (contract)")
+    _check(load(Splash.splash_scene_path()) != null,
+        "TP-6.2 splash scene resource loads headless (entry scene)")
+    _check(load(Splash.menu_scene_path()) != null,
+        "TP-6.2 main menu scene resource loads headless (transition target exists)")
+    _check(MainMenu.navigation_enabled() == false,
+        "TP-6.2 menu placeholder exposes no navigation (approved scope, T-6.10)")
+    _check(String(ProjectSettings.get_setting("application/run/main_scene")) == Splash.splash_scene_path(),
+        "TP-6.2 splash configured as project main scene (startup flow)")
 
 
 ## Simulasi hingga panah kembali ke ketinggian awal.
