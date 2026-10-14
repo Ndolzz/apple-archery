@@ -1,6 +1,6 @@
 # Apple Archery — Register Risiko
 
-Versi: 0.3 (diperbarui pada T-1.7: R-11 teratasi via ADR-011 yang disetujui pemilik proyek)
+Versi: 0.4 (diperbarui pada T-6.10: risiko baru R-12 kualitas visual splash placeholder dan R-13 alur startup berakhir di menu tanpa navigasi)
 
 | ID | Risiko | Dampak | Kemungkinan | Mitigasi |
 |---|---|---|---|---|
@@ -15,3 +15,5 @@ Versi: 0.3 (diperbarui pada T-1.7: R-11 teratasi via ADR-011 yang disetujui pemi
 | R-09 | Performa pada HP kelas bawah | Sedang | Sedang | Aset ringan, mode performa, pengukuran FPS wajib di Phase 7 |
 | R-10 | Kehilangan progres karena overwrite | Tinggi | Rendah | Commit kecil, backup save, review sebelum push |
 | R-11 | Desain skoring: dengan collision lingkaran dan skor dari titik masuk pertama (ADR-009), titik impact gameplay aktual selalu tepat di tepi target (d = radius) sehingga tembakan nyata selalu mendapat zona terluar (10 poin); zona tengah/pusat tidak pernah tercapai | Tinggi | Pasti (geometri) — kini teratasi | TERATASI (T-1.7): ADR-011 disetujui pemilik proyek — titik skor dihitung dari kedalaman penetrasi ujung panah (S = E + dhat * 0.5 * L; swept collision tetap untuk deteksi/pemilihan target); tembakan melalui pusat menghasilkan Perfect Shot; terverifikasi TP-1.17/TP-1.23 pada run CI #12 (74cded1). Pemantauan lanjutan: keseimbangan nilai skor saat uji perangkat manual |
+| R-12 | Kualitas visual splash "Archery Signature" (placeholder prosedural tanpa aset final) belum terverifikasi: kelancaran animasi, proporsi komposisi, keterbacaan judul pada rasio layar berbeda, dan performa startup di perangkat Android | Sedang | Tinggi | Kontrak perilaku (durasi, anti-skip, transisi tunggal) terverifikasi otomatis via TP-6.2 di CI (b9d11ab); checklist manual splash ditambahkan ke 04-TEST-PLAN; aset final menyusul sebelum Phase 7 (R-05) |
+| R-13 | Alur startup kini berakhir di menu utama placeholder TANPA navigasi — gameplay arena tidak dapat dicapai dari startup normal hingga navigasi disetujui | Tinggi | Pasti (keputusan eksplisit pemilik proyek) | Arena tetap dapat dimuat langsung (F6/run scene) untuk pengembangan; keputusan dan implementasi navigasi menu menyusul sebagai tugas terpisah yang menunggu persetujuan pemilik proyek |

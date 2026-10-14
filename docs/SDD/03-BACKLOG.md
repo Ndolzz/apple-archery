@@ -85,6 +85,9 @@ Catatan T-1.2 (commit 10f5042): BallisticsModel murni (ADR-002), satuan SI, semi
 - [ ] T-6.7 Pengaturan performa perangkat rendah.
 - [ ] T-6.8 About, Credits, Changelog, identitas Naze.
 - [ ] T-6.9 Developer Console, Physics Lab, Debug Overlay.
+- [x] T-6.10 Splash animation "Archery Signature" + menu utama placeholder visual tanpa navigasi (ADR-012; commit b9d11ab; bukti: run CI untuk commit b9d11ab LULUS — job succeeded 18 s, 24 grup TP-1.x + TP-6.2, 0 gagal; uji visual manual menyusul).
+
+Catatan T-6.10 (commit b9d11ab): splash "Archery Signature" (scenes/ui/splash.gd + splash.tscn) — presentasi murni; garis waktu 2.5 s: background 0.0-0.4, siluet busur 0.4-0.9 (Line2D prosedural), jejak panah 0.9-1.5, target/apel 1.5-1.9 (draw_circle prosedural), judul 1.9-2.3, hold hingga 2.5; tidak ada skip (input tidak ditangani); transisi tepat satu kali via flag _transitioned + Timer one-shot; kegagalan memuat scene tujuan → push_error yang jelas (transisi dibatalkan); visual 100% node bawaan tanpa aset eksternal/shader/partikel (R-05). Menu utama placeholder (scenes/ui/main_menu.gd + main_menu.tscn) — tanpa navigasi sesuai keputusan pemilik proyek (kontrak navigation_enabled() == false diuji TP-6.2). project.godot run/main_scene diubah dari arena.tscn ke splash.tscn (perubahan eksplisit, ADR-012). TP-6.2 ditambahkan ke tests/run_tests.gd; ci.yml gerbang keterlacakan kini juga mewajibkan TP-6.2 tereksekusi. Keterbatasan: uji visual/manual belum dilakukan (R-01/R-12); arena tidak dapat dicapai dari alur startup normal hingga navigasi menu disetujui (R-13).
 
 ## Phase 7 — Regresi, Optimasi, Build (FR-QA-001..004)
 

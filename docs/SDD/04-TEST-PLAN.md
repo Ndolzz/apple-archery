@@ -1,6 +1,6 @@
 # Apple Archery — Test Plan
 
-Versi: 0.1.7 (T-1.7: TP-1.23 regresi penetrasi ADR-011 dan TP-1.24 logika murni HUD ditambahkan; ekspektasi TP-1.17 diperbarui ke penetrasi; bukti run CI #12)
+Versi: 0.1.8 (T-6.10: TP-6.2 kontrak splash "Archery Signature"/menu placeholder ditambahkan dan tereksekusi di CI pada commit b9d11ab; checklist manual splash ditambahkan)
 
 ## 1. Strategi
 
@@ -13,7 +13,7 @@ Versi: 0.1.7 (T-1.7: TP-1.23 regresi penetrasi ADR-011 dan TP-1.24 logika murni 
 
 ### Status eksekusi CI (T-1.8)
 
-TP-1.1 s.d. TP-1.24 tereksekusi di GitHub Actions (workflow ci.yml, Godot 4.3-stable eksplisit, ubuntu-24.04). Bukti: run CI #8 pada commit 1b954a0 (22/22 kelompok, 111 pemeriksaan lulus, 0 gagal) dan run CI #12 pada commit 74cded1 (24/24 kelompok tereksekusi, 0 gagal; job "Headless import, parse check, and tests" succeeded); import resource headless dan parse check seluruh berkas .gd lulus. Riwayat run #1..#7 (kegagalan dan perbaikannya) tercatat pada catatan T-1.8 di 03-BACKLOG.md. Catatan transparansi: run CI untuk commit 34518a1 gagal di gerbang keterlacakan karena run_tests.gd belum memuat TP-1.24 pada commit tersebut (kesenjangan sementara antar commit, ditutup pada 74cded1); kegagalan tersebut tidak disembunyikan.
+TP-1.1 s.d. TP-1.24 tereksekusi di GitHub Actions (workflow ci.yml, Godot 4.3-stable eksplisit, ubuntu-24.04). Bukti: run CI #8 pada commit 1b954a0 (22/22 kelompok, 111 pemeriksaan lulus, 0 gagal) dan run CI #12 pada commit 74cded1 (24/24 kelompok tereksekusi, 0 gagal; job "Headless import, parse check, and tests" succeeded); import resource headless dan parse check seluruh berkas .gd lulus. Riwayat run #1..#7 (kegagalan dan perbaikannya) tercatat pada catatan T-1.8 di 03-BACKLOG.md. Catatan transparansi: run CI untuk commit 34518a1 gagal di gerbang keterlacakan karena run_tests.gd belum memuat TP-1.24 pada commit tersebut (kesenjangan sementara antar commit, ditutup pada 74cded1); kegagalan tersebut tidak disembunyikan. T-6.10 (ADR-012): TP-6.2 (kontrak splash/menu) ditambahkan dan tereksekusi pada run CI untuk commit b9d11ab — job "Headless import, parse check, and tests" succeeded (18 s); gerbang keterlacakan kini mewajibkan 24 grup TP-1.x dan TP-6.2 tereksekusi dengan 0 kegagalan.
 
 ### Phase 1 (fisika, skoring, bidik, level, presentasi murni)
 - TP-1.1 BallisticsModel: lintasan tanpa angin cocok dengan solusi analitik parabola (toleransi batas metode 0.5*|g|*dt*t ditambah margin numerik 0.001 untuk akumulasi float32 Vector2 Godot).
@@ -40,6 +40,7 @@ TP-1.1 s.d. TP-1.24 tereksekusi di GitHub Actions (workflow ci.yml, Godot 4.3-st
 - TP-1.22 TrajectoryPreview: titik identik dengan BallisticsModel.predict_trajectory untuk parameter sama (tidak ada fisika duplikat); low_effects mengurangi jumlah titik; toggle enabled menghapus titik.
 - TP-1.23 ScoringService/CollisionService (regresi ADR-011): titik masuk collision tidak otomatis menentukan skor akhir; penetrasi mengarah ke pusat menghasilkan Perfect (50); penetrasi dangkal menghasilkan zona luar (10); tembakan dari arah berlawanan simetris; tabrakan tangensial/arah nol dinilai dari titik masuk (tepi, inklusif); tembakan meleset tidak menghasilkan skor; satu panah tepat satu skor; target pertama sepanjang jalur konsisten.
 - TP-1.24 ArenaHUD (T-1.7, logika murni): arah angin 8 sektor sesuai konvensi y-up fisika ("•" saat tenang, timur/barat/utara/diagonal); rasio daya dijepit 0..1; teks umpan balik benar untuk Perfect ("PERFECT +50"), combo ("+20  x3"), hit biasa ("+10"), dan meleset ("Meleset!").
+- TP-6.2 Splash/MainMenu (T-6.10, ADR-012, kontrak): durasi total garis waktu 2.5 s; batas antarfase (background/bow/arrow/target/title/hold) tepat; fase terdefinisi untuk semua nilai waktu (dijepit); tidak ada transisi sebelum garis waktu selesai (anti-skip/anti-prematur); transisi hanya diizinkan pada/setelah selesai; path tujuan transisi = scene menu utama; scene splash dan menu termuat headless; menu placeholder tidak mengekspos navigasi; splash dikonfigurasi sebagai main scene proyek (ProjectSettings).
 
 ### Koreksi pengujian pada T-1.8 (berbasis bukti run CI; bukan pelemahan tes)
 
@@ -77,6 +78,7 @@ Catatan TP-1.7 s.d. TP-1.11 (ditambahkan pada T-1.3): AC FR-GF-001 memerlukan me
 - Audio tidak terpotong; volume pengaturan berfungsi.
 - Multiplayer lokal: input dua pemain tidak bertukar.
 - Aksesibilitas: pengaturan diterapkan tanpa restart bila mungkin.
+- Splash (T-6.10): enam fase animasi berjalan halus total ~2.5 s; tidak dapat dilewati oleh sentuhan/klik/tombol; transisi ke menu utama tepat satu kali; judul dan kredit terbaca pada rasio layar berbeda; waktu startup dan pemakaian memori wajar pada perangkat Android target; kegagalan memuat scene tujuan menampilkan error yang jelas.
 
 ## 4. Gerbang Mutu
 

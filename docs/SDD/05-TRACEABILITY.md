@@ -1,6 +1,6 @@
 # Apple Archery — Traceability Matrix
 
-Versi: 0.1.7 (diperbarui setelah T-1.7: ADR-011 penetrasi; TP-1.23/TP-1.24; run CI #12 commit 74cded1 lulus — 24/24 kelompok TP)
+Versi: 0.1.8 (diperbarui setelah T-6.10: FR-AV-008 splash; TP-6.2 tereksekusi di CI pada commit b9d11ab)
 
 | Requirement | Tugas (03-BACKLOG) | Pengujian (04-TEST-PLAN) | Fase | Status |
 |---|---|---|---|---|
@@ -37,16 +37,17 @@ Versi: 0.1.7 (diperbarui setelah T-1.7: ADR-011 penetrasi; TP-1.23/TP-1.24; run 
 | FR-AV-005 Tutorial | T-6.4 | Manual P6 | 6 | Belum |
 | FR-AV-006 Aksesibilitas | T-6.5 | Manual P6 | 6 | Belum |
 | FR-AV-007 Cartoon wind VFX (v0.2) | T-1.6 | TP-1.21, Manual P1 | 1 | Terverifikasi di CI (9e07151; run CI #8 lulus; uji manual menyusul) |
+| FR-AV-008 Splash "Archery Signature" (v0.4) | T-6.10 | TP-6.2, Manual P6 | 6 | Kontrak terverifikasi di CI (b9d11ab: garis waktu, transisi tunggal, pemuatan scene, main scene proyek); uji visual manual menyusul (R-12) |
 | FR-SY-001 Save offline | T-6.6 | TP-6.1 | 6 | Belum |
 | FR-SY-002 Autosave/backup | T-6.6 | TP-6.1 | 6 | Belum |
 | FR-SY-003 Performa rendah | T-6.7 | Manual P6/P7 (FPS) | 6-7 | Belum (low_effects dasar tersedia di T-1.6; T-1.7 menambahkannya pada HUD) |
-| FR-DV-001 Identitas Naze | T-6.8 | Manual P6 | 6 | Belum |
+| FR-DV-001 Identitas Naze | T-6.8, T-6.10 | Manual P6 | 6 | Belum tervalidasi manual (kredit "Dikembangkan oleh Naze" tampil pada splash dan menu placeholder — b9d11ab; verifikasi visual menyusul) |
 | FR-DV-002 About/Credits | T-6.8 | Manual P6 | 6 | Belum |
 | FR-DV-003 Changelog | T-6.8 | Manual P6 | 6 | Belum |
 | FR-DV-004 Developer Console | T-6.9 | Manual P6 | 6 | Belum |
 | FR-DV-005 Physics Lab | T-6.9 | Manual P6 | 6 | Belum |
 | FR-DV-006 Debug Overlay | T-6.9 | Manual P6 | 6 | Belum |
-| FR-QA-001 Tes otomatis | T-1.8, T-1.9 | Log CI | 1 | Terealisasikan: workflow ci.yml Godot 4.3-stable (8109893..1b954a0); run CI #8 lulus (TP-1.1..1.22, 111 lulus/0 gagal); T-1.7 memperluas ke TP-1.1..TP-1.24 — run CI #12 (74cded1) lulus, 24/24 kelompok, 0 gagal; T-1.9 penyempurnaan cakupan lanjutan menyusul |
+| FR-QA-001 Tes otomatis | T-1.8, T-1.9 | Log CI | 1 | Terealisasikan: workflow ci.yml Godot 4.3-stable (8109893..1b954a0); run CI #8 lulus (TP-1.1..1.22); T-1.7 memperluas ke TP-1.1..TP-1.24 (run CI #12 lulus); T-6.10 menambah TP-6.2 ke gerbang keterlacakan — run CI untuk b9d11ab lulus (job succeeded 18 s, 0 gagal); T-1.9 penyempurnaan cakupan lanjutan menyusul |
 | FR-QA-002 Regresi | T-7.1 | Log CI | 7 | Belum (dasar: CI berjalan pada setiap push sejak T-1.8) |
 | FR-QA-003 Build APK | T-7.3 | Artefak workflow | 7 | Belum |
 | FR-QA-004 Verifikasi APK | T-7.4 | Catatan manual | 7 | Belum |

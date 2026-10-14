@@ -72,3 +72,15 @@ Keputusan:
 6. Nilai ADR-009 dipertahankan penuh: zona 50/20/10 (fraksi 1/3, 2/3, 1.0), Perfect Shot = zona pusat, batas inklusif ke zona dalam, rumus combo 1 + 0.25 * (combo - 1) untuk combo >= 2.
 Dampak API: CollisionService.segment_circle_first_hit mengembalikan "direction"; ScoringService.score_hit menghitung titik penetrasi via compute_penetration_point sebelum classify; classify tidak berubah. Ekspektasi TP-1.17 diperbarui (penetrasi, bukan tepi) dan TP-1.23 (regresi penetrasi) ditambahkan; TP-1.24 (logika murni HUD) ditambahkan pada T-1.7 yang sama.
 Konsekuensi: Skor kini bergantung pada geometri penetrasi yang terdefinisi, bukan titik masuk semata. Verifikasi: run CI #12 (commit 74cded1) lulus — 24/24 kelompok TP tereksekusi, 0 gagal. Keseimbangan nilai skor (tembakan pusat menjadi lebih mudah dicapai) ditinjau saat uji perangkat manual.
+
+## ADR-012: Splash "Archery Signature" dan alur startup (T-6.10)
+Status: Disetujui pemilik proyek (briefing T-6.10: tujuan transisi = menu utama placeholder visual tanpa navigasi; tugas baru di bawah Phase 6)
+Konteks: Sebelum T-6.10, run/main_scene langsung menuju arena (tidak ada splash/menu utama). Pemilik proyek meminta animasi pembukaan bertema Archery Signature; karena menu utama belum tersedia, pemilik memutuskan transisi menuju menu utama placeholder visual TANPA navigasi (navigasi menyusul sebagai tugas terpisah yang menunggu persetujuan).
+Keputusan:
+1. Splash adalah komponen presentasi murni: tidak menyentuh fisika, collision, skor, atau kontrol bidikan; tanpa simulasi tembakan interaktif.
+2. Alur startup: project.godot run/main_scene = res://scenes/ui/splash.tscn (perubahan eksplisit dan tercatat); transisi tunggal ke res://scenes/ui/main_menu.tscn setelah garis waktu animasi selesai.
+3. Garis waktu total 2.5 s (rentang 2-3 s yang disetujui): background 0.0-0.4 → busur 0.4-0.9 → jejak panah 0.9-1.5 → target/apel 1.5-1.9 → judul 1.9-2.3 → hold 2.3-2.5. Garis waktu diekspos sebagai fungsi murni (total_duration/phase_for_time/should_transition) agar dapat diuji headless.
+4. Tidak ada skip: input tidak ditangani sama sekali selama splash; transisi terjadi tepat satu kali (flag _transitioned + Timer satu kali), bukan loop yang tidak pernah selesai; kegagalan memuat scene tujuan menghasilkan push_error yang jelas — transisi dibatalkan, tidak dianggap berhasil secara diam-diam.
+5. Visual dibangun prosedural dari node bawaan (ColorRect, Line2D, Label, _draw) tanpa aset eksternal, plugin, shader, atau partikel berat — placeholder sesuai R-05; keterbatasan artistik tetap ada hingga aset final (R-12).
+6. MainMenu placeholder: kontrak navigation_enabled() == false (diuji TP-6.2); tidak ada tombol interaktif. Konsekuensi: gameplay arena tidak dapat dicapai dari alur startup normal hingga navigasi disetujui (R-13).
+Konsekuensi & verifikasi: TP-6.2 (garis waktu, kontrak transisi, pemuatan scene headless, main_scene proyek) tereksekusi di CI pada commit b9d11ab — job "Headless import, parse check, and tests" succeeded (18 s); gerbang keterlacakan 24 grup TP-1.x + TP-6.2 dengan 0 kegagalan terpenuhi. Uji visual manual menyusul (R-01/R-12).

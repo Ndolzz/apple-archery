@@ -1,6 +1,6 @@
 # Apple Archery — Spesifikasi (SDD)
 
-Versi: 0.3 (T-1.7: FR-GF-005 diperjelas — titik skor dari kedalaman penetrasi ujung panah per ADR-011; riwayat lengkap pada bagian 6)
+Versi: 0.4 (T-6.10: FR-AV-008 Splash Screen "Archery Signature" ditambahkan atas permintaan pengguna; menu utama placeholder visual tanpa navigasi; riwayat pada bagian 6)
 Status: Draft; Phase 1 berjalan bertahap.
 
 ## 1. Ringkasan Produk
@@ -69,6 +69,8 @@ Setiap requirement memiliki ID, acceptance criteria (AC), tugas implementasi (li
 - FR-AV-006 Pengaturan aksesibilitas (ukuran UI, kontras, reduksi gerak, kontrol alternatif).
 - FR-AV-007 Cartoon Wind VFX (ditambahkan T-1.6 atas permintaan pengguna; presentasi saja).
   - AC: Efek angin 2D bergaya kartun (garis lengkung/partikel/daun) mengikuti arah dan intensitas dari parameter angin model fisika yang sama, bukan sistem angin visual terpisah; efek tidak menutupi target, zona skor, atau panah; tersedia pengaturan efek rendah untuk perangkat terbatas; VFX tidak mengubah hasil simulasi.
+- FR-AV-008 Splash Screen "Archery Signature" (ditambahkan T-6.10 atas permintaan pengguna; presentasi saja).
+  - AC: Animasi pembukaan dengan urutan latar → siluet busur → jejak panah → target/apel → judul "Apple Archery" → penahanan singkat; total durasi sekitar 2.5 detik (rentang 2-3 detik); tidak dapat dilewati oleh input apa pun (sentuhan, klik, tombol); transisi menuju menu utama terjadi tepat satu kali setelah animasi selesai; kegagalan memuat scene tujuan menghasilkan error yang jelas; splash tidak menyentuh fisika, collision, skor, atau kontrol; menu utama saat ini placeholder visual tanpa navigasi (keputusan pemilik proyek; navigasi menyusul dengan persetujuan).
 
 ### SY — Sistem dan Penyimpanan
 
@@ -108,3 +110,4 @@ Setiap requirement memiliki ID, acceptance criteria (AC), tugas implementasi (li
 
 - v0.2 (T-1.6): FR-GF-006 (Soft Camera Zoom) dan FR-AV-007 (Cartoon Wind VFX) ditambahkan atas permintaan dan persetujuan eksplisit pengguna dalam instruksi T-1.6; keduanya presentasi saja (tidak mengubah simulasi). FR-GF-004 diperjelas: prediksi harus melalui BallisticsModel. FR-GF-005 diperjelas: mengikuti ADR-009 (disetujui sementara pengguna; konfigurasi per level).
 - v0.3 (T-1.7): FR-GF-005 diperjelas berdasarkan keputusan desain pemilik proyek untuk risiko R-11 (ADR-011): titik skor dihitung dari kedalaman penetrasi ujung panah ke dalam geometri target, bukan semata titik masuk pertama swept collision; swept collision tetap untuk deteksi dan pemilihan target; nilai zona/combo ADR-009 dipertahankan.
+- v0.4 (T-6.10): FR-AV-008 (Splash Screen "Archery Signature") ditambahkan atas permintaan dan keputusan eksplisit pemilik proyek (tujuan transisi: menu utama placeholder visual tanpa navigasi; ID tugas baru di bawah Phase 6); perubahan alur startup (run/main_scene kini splash) tercatat pada ADR-012.
